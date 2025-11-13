@@ -1,0 +1,50 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+trim_trailing_whitespace = true
+
+# Frontend - JavaScript/TypeScript/React
+[*.{js,jsx,ts,tsx}]
+indent_style = space
+indent_size = 2
+
+# Backend - Java
+[*.java]
+indent_style = space
+indent_size = 4
+
+# Other languages
+[*.{py,cs,cpp,c,h,go,rb,php}]
+indent_style = space
+indent_size = 2
+
+# Python uses 4 spaces
+[*.py]
+indent_size = 4
+
+# XML/Maven
+[*.{xml,pom}]
+indent_size = 2
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+
+# YAML
+[*.{yml,yaml}]
+indent_size = 2
+
+# JSON
+[*.json]
+indent_size = 2
+
+# Make files
+[Makefile]
+indent_style = tab

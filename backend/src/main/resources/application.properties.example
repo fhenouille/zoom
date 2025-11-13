@@ -1,0 +1,29 @@
+# Backend - Spring Boot
+spring.application.name=zoom-backend
+
+# Server Port
+server.port=8080
+
+# H2 Database Configuration
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+# JPA/Hibernate
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# H2 Console (for development only)
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# CORS Configuration
+app.cors.allowed-origins=http://localhost:5173,http://localhost:3000
+
+# Logging
+logging.level.root=INFO
+logging.level.com.example=DEBUG
+logging.level.org.hibernate.SQL=DEBUG

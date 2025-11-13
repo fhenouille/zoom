@@ -1,0 +1,35 @@
+{
+  "recommendations": [
+    // GitHub Copilot
+    "github.copilot",
+    "github.copilot-chat",
+
+    // Code Quality & Formatting
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+
+    // Frontend - React & TypeScript
+    "dsznajder.es7-react-js-snippets",
+    "bradlc.vscode-tailwindcss",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+
+    // Backend - Java & Spring Boot
+    "vscjava.vscode-java-pack",
+    "vscjava.vscode-spring-initializr",
+    "vscjava.vscode-spring-boot-dashboard",
+    "vmware.vscode-spring-boot",
+    "redhat.java",
+    "vscjava.vscode-maven",
+
+    // Testing
+    "orta.vscode-jest",
+
+    // Docker
+    "ms-azuretools.vscode-docker",
+
+    // REST Client
+    "humao.rest-client"
+  ]
+}
