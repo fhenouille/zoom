@@ -1,5 +1,5 @@
 -- Insertion de données de test
-INSERT INTO meetings (start, end) VALUES
+INSERT INTO meetings (start_time, end_time) VALUES
     ('2025-11-14 09:00:00', '2025-11-14 10:00:00'),
     ('2025-11-14 14:00:00', '2025-11-14 15:30:00'),
     ('2025-11-15 10:00:00', '2025-11-15 11:00:00'),

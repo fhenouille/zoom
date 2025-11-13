@@ -105,10 +105,7 @@
     {
       "label": "Backend: Run Spring Boot",
       "type": "shell",
-      "command": "./mvnw spring-boot:run",
-      "windows": {
-        "command": ".\\mvnw.cmd spring-boot:run"
-      },
+      "command": "mvn spring-boot:run",
       "options": {
         "cwd": "${workspaceFolder}/backend"
       },
