@@ -35,15 +35,20 @@ zoom/
 └── README.md
 ```
 
-## Configuration GitHub Copilot
+## 📖 Documentation
 
-Ce projet est configuré avec GitHub Copilot pour améliorer la productivité du développement. Les instructions personnalisées pour Copilot se trouvent dans `.github/copilot-instructions.md`.
+- **[Guide de Démarrage Rapide](GETTING_STARTED.md)** - Instructions détaillées pour installer et lancer le projet
+- **Configuration GitHub Copilot** - Instructions dans `.github/copilot-instructions.md`
+- **Prompts Sauvegardés** - Bibliothèque de prompts dans `.github/prompts/`
 
 ### Fichiers de configuration
 
 - `.github/copilot-instructions.md` - Instructions personnalisées pour GitHub Copilot
+- `.github/prompts/` - Prompts réutilisables pour générer du code
 - `.vscode/settings.json` - Configuration VS Code avec paramètres Copilot
 - `.vscode/extensions.json` - Extensions recommandées
+- `.vscode/tasks.json` - Tâches automatisées (build, run, test)
+- `.vscode/launch.json` - Configurations de débogage
 - `.editorconfig` - Configuration de l'éditeur pour la cohérence du code
 - `.github/PULL_REQUEST_TEMPLATE.md` - Template pour les pull requests
 
