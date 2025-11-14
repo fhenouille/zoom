@@ -1,11 +1,13 @@
 package com.zoom.repository;
 
-import com.zoom.entity.Meeting;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.zoom.entity.Meeting;
 
 /**
  * Repository pour l'entité Meeting
@@ -22,4 +24,24 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
      * Trouve toutes les réunions après une date donnée
      */
     List<Meeting> findByStartAfter(LocalDateTime date);
+
+    /**
+     * Trouve une réunion par son ID Zoom
+     */
+    Optional<Meeting> findByZoomMeetingId(String zoomMeetingId);
+
+    /**
+     * Vérifie si une réunion existe avec cet ID Zoom
+     */
+    boolean existsByZoomMeetingId(String zoomMeetingId);
+
+    /**
+     * Trouve une session par son UUID Zoom
+     */
+    Optional<Meeting> findByZoomUuid(String zoomUuid);
+
+    /**
+     * Vérifie si une session existe avec cet UUID Zoom
+     */
+    boolean existsByZoomUuid(String zoomUuid);
 }

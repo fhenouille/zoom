@@ -1,7 +1,3 @@
--- Insertion de données de test
-INSERT INTO meetings (start_time, end_time) VALUES
-    ('2025-11-14 09:00:00', '2025-11-14 10:00:00'),
-    ('2025-11-14 14:00:00', '2025-11-14 15:30:00'),
-    ('2025-11-15 10:00:00', '2025-11-15 11:00:00'),
-    ('2025-11-16 16:00:00', '2025-11-16 17:00:00'),
-    ('2025-11-20 09:00:00', '2025-11-20 10:30:00');
+-- Fichier de données vide
+-- Les meetings seront synchronisés automatiquement depuis l'API Zoom
+

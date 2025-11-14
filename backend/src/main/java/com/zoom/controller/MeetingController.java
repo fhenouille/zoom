@@ -1,15 +1,17 @@
 package com.zoom.controller;
 
-import com.zoom.entity.Meeting;
-import com.zoom.service.MeetingService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.zoom.entity.Meeting;
+import com.zoom.service.MeetingService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Contrôleur REST pour la gestion des réunions
@@ -28,8 +30,14 @@ public class MeetingController {
      */
     @GetMapping
     public ResponseEntity<List<Meeting>> getAllMeetings() {
-        log.info("GET /api/meetings - Récupération de toutes les réunions");
+        log.info("📥 GET /api/meetings - Récupération de toutes les réunions");
+        long startTime = System.currentTimeMillis();
+
         List<Meeting> meetings = meetingService.getAllMeetings();
+
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("📤 GET /api/meetings - Réponse: {} meetings en {}ms", meetings.size(), duration);
+
         return ResponseEntity.ok(meetings);
     }
 
@@ -38,10 +46,17 @@ public class MeetingController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Meeting> getMeetingById(@PathVariable Long id) {
-        log.info("GET /api/meetings/{} - Récupération de la réunion", id);
-        return meetingService.getMeetingById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        log.info("📥 GET /api/meetings/{} - Récupération de la réunion", id);
+        ResponseEntity<Meeting> response = meetingService.getMeetingById(id)
+                .map(meeting -> {
+                    log.info("📤 GET /api/meetings/{} - Trouvé: '{}'", id, meeting.getTopic());
+                    return ResponseEntity.ok(meeting);
+                })
+                .orElseGet(() -> {
+                    log.warn("⚠️ GET /api/meetings/{} - Non trouvé", id);
+                    return ResponseEntity.notFound().build();
+                });
+        return response;
     }
 
     /**
@@ -49,8 +64,12 @@ public class MeetingController {
      */
     @PostMapping
     public ResponseEntity<Meeting> createMeeting(@Valid @RequestBody Meeting meeting) {
-        log.info("POST /api/meetings - Création d'une nouvelle réunion");
+        log.info("📥 POST /api/meetings - Création d'une nouvelle réunion: '{}'", meeting.getTopic());
+        log.debug("Données reçues: start={}, end={}", meeting.getStart(), meeting.getEnd());
+
         Meeting createdMeeting = meetingService.createMeeting(meeting);
+
+        log.info("📤 POST /api/meetings - Créé avec ID={}", createdMeeting.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdMeeting);
     }
 
@@ -61,11 +80,15 @@ public class MeetingController {
     public ResponseEntity<Meeting> updateMeeting(
             @PathVariable Long id,
             @Valid @RequestBody Meeting meeting) {
-        log.info("PUT /api/meetings/{} - Mise à jour de la réunion", id);
+        log.info("📥 PUT /api/meetings/{} - Mise à jour de la réunion", id);
+        log.debug("Nouvelles données: topic='{}', start={}, end={}", meeting.getTopic(), meeting.getStart(), meeting.getEnd());
+
         try {
             Meeting updatedMeeting = meetingService.updateMeeting(id, meeting);
+            log.info("📤 PUT /api/meetings/{} - Mise à jour réussie", id);
             return ResponseEntity.ok(updatedMeeting);
         } catch (RuntimeException e) {
+            log.warn("⚠️ PUT /api/meetings/{} - Non trouvé: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -75,8 +98,9 @@ public class MeetingController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMeeting(@PathVariable Long id) {
-        log.info("DELETE /api/meetings/{} - Suppression de la réunion", id);
+        log.info("📥 DELETE /api/meetings/{} - Suppression de la réunion", id);
         meetingService.deleteMeeting(id);
+        log.info("📤 DELETE /api/meetings/{} - Supprimé avec succès", id);
         return ResponseEntity.noContent().build();
     }
 
