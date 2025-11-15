@@ -12,11 +12,11 @@ export const apiClient = axios.create({
 // Intercepteur de requête
 apiClient.interceptors.request.use(
   (config) => {
-    // Ajouter un token d'authentification si nécessaire
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    // Ajouter le token JWT à chaque requête
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -30,8 +30,10 @@ apiClient.interceptors.response.use(
   (error) => {
     // Gérer les erreurs globalement
     if (error.response?.status === 401) {
-      // Rediriger vers la page de connexion
-      console.error('Non autorisé');
+      // Rediriger vers la page de connexion si non autorisé
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
