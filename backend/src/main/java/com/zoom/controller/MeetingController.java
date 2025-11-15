@@ -6,9 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.zoom.dto.ZoomPollResponse;
+import com.zoom.dto.*;
 import com.zoom.entity.Meeting;
-import com.zoom.entity.Participant;
+import com.zoom.entity.MeetingAssistance;
+import com.zoom.repository.MeetingAssistanceRepository;
 import com.zoom.service.*;
 
 import jakarta.validation.Valid;
@@ -28,6 +29,7 @@ public class MeetingController {
     private final MeetingService meetingService;
     private final ParticipantService participantService;
     private final ZoomApiService zoomApiService;
+    private final MeetingAssistanceRepository meetingAssistanceRepository;
 
     /**
      * Récupère toutes les réunions
@@ -119,38 +121,38 @@ public class MeetingController {
     }
 
     /**
-     * Récupère les participants d'un meeting
+     * Récupère les participants d'un meeting avec les valeurs d'assistance
      * Si non présents en base, les récupère depuis l'API Zoom
      */
     @GetMapping("/{id}/participants")
-    public ResponseEntity<List<Participant>> getMeetingParticipants(@PathVariable Long id) {
+    public ResponseEntity<ParticipantsResponse> getMeetingParticipants(@PathVariable Long id) {
         log.info("📥 GET /api/meetings/{}/participants - Récupération des participants", id);
         long startTime = System.currentTimeMillis();
 
-        List<Participant> participants = participantService.getParticipants(id);
+        ParticipantsResponse response = participantService.getParticipants(id);
 
         long duration = System.currentTimeMillis() - startTime;
         log.info("📤 GET /api/meetings/{}/participants - Réponse: {} participants en {}ms",
-            id, participants.size(), duration);
+            id, response.getParticipants().size(), duration);
 
-        return ResponseEntity.ok(participants);
+        return ResponseEntity.ok(response);
     }
 
     /**
      * Force la re-synchronisation des participants depuis Zoom
      */
     @PostMapping("/{id}/participants/refresh")
-    public ResponseEntity<List<Participant>> refreshMeetingParticipants(@PathVariable Long id) {
-        log.info("📥 POST /api/meetings/{}/participants/refresh - Re-synchronisation forcée", id);
+    public ResponseEntity<ParticipantsResponse> refreshParticipants(@PathVariable Long id) {
+        log.info("📥 POST /api/meetings/{}/participants/refresh - Re-synchronisation depuis Zoom", id);
         long startTime = System.currentTimeMillis();
 
-        List<Participant> participants = participantService.refreshParticipants(id);
+        ParticipantsResponse response = participantService.refreshParticipants(id);
 
         long duration = System.currentTimeMillis() - startTime;
         log.info("📤 POST /api/meetings/{}/participants/refresh - Réponse: {} participants en {}ms",
-            id, participants.size(), duration);
+            id, response.getParticipants().size(), duration);
 
-        return ResponseEntity.ok(participants);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -179,5 +181,34 @@ public class MeetingController {
             id, pollResponse.getParticipants().size(), duration);
 
         return ResponseEntity.ok(pollResponse);
+    }
+
+    /**
+     * Sauvegarde les valeurs d'assistance pour un meeting
+     */
+    @PostMapping("/{id}/assistance")
+    public ResponseEntity<Void> saveAssistance(@PathVariable Long id, @RequestBody @Valid AssistanceSaveRequest request) {
+        log.info("💾 POST /api/meetings/{}/assistance - Sauvegarde de l'assistance", id);
+        long startTime = System.currentTimeMillis();
+
+        // Vérifie que le meeting existe
+        Meeting meeting = meetingService.getMeetingById(id)
+                .orElseThrow(() -> new RuntimeException("Meeting non trouvé avec l'ID: " + id));
+
+        // Supprime l'ancienne assistance si elle existe
+        meetingAssistanceRepository.findByMeetingId(id).ifPresent(existing -> {
+            meetingAssistanceRepository.delete(existing);
+            log.info("🗑️ Ancienne assistance supprimée pour le meeting {}", id);
+        });
+
+        // Sauvegarde la nouvelle assistance
+        MeetingAssistance assistance = new MeetingAssistance(meeting, request.getTotal(), request.getInPersonTotal(), request.getValues());
+        meetingAssistanceRepository.save(assistance);
+
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("✓ POST /api/meetings/{}/assistance - Assistance sauvegardée (total: {}) en {}ms",
+            id, request.getTotal(), duration);
+
+        return ResponseEntity.ok().build();
     }
 }

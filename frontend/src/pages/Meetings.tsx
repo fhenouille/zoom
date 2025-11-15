@@ -8,16 +8,19 @@ import {
   CalendarOutlined,
   ClockCircleOutlined,
   ReloadOutlined,
+  SaveOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
 import {
   Button,
   Card,
   Descriptions,
+  InputNumber,
   message,
   Modal,
   Space,
   Spin,
+  Switch,
   Table,
   Tag,
   Typography,
@@ -38,6 +41,63 @@ function Meetings() {
   const [loadingPolls, setLoadingPolls] = useState(false);
   const [pollsAvailability, setPollsAvailability] = useState<Map<number, boolean>>(new Map());
   const [checkingPolls, setCheckingPolls] = useState<Set<number>>(new Set());
+  const [assistanceValues, setAssistanceValues] = useState<Map<number, number>>(new Map());
+  const [attendancePollData, setAttendancePollData] = useState<Map<string, string>>(new Map());
+  const [showAssistanceColumns, setShowAssistanceColumns] = useState(false);
+  const [inPersonValue, setInPersonValue] = useState<number>(0);
+
+  // Fonction pour calculer la valeur initiale d'assistance selon les règles de priorité
+  const calculateInitialAssistance = (name: string, pollAnswer?: string): number => {
+    // Règle 1 : 0 si nom = Mons Assemblee ou nom = tablette pupitre
+    if (name === 'Mons Assemblee' || name === 'tablette pupitre') {
+      return 0;
+    }
+
+    // Règle 2 : Valeur = réponse au sondage si elle existe
+    if (pollAnswer) {
+      const pollValue = Number.parseInt(pollAnswer.charAt(0));
+      if (!isNaN(pollValue)) {
+        return pollValue;
+      }
+    }
+
+    // Règle 3 : Si nom finit par (x), valeur initiale = x
+    const match = name.match(/\((\d+)\)$/);
+    if (match) {
+      const extractedValue = Number.parseInt(match[1]);
+      if (!isNaN(extractedValue)) {
+        return extractedValue;
+      }
+    }
+
+    // Règle 4 : Valeur par défaut = 1
+    return 1;
+  };
+
+  // Calculer le total de l'assistance
+  const calculateTotalAssistance = (): number => {
+    let total = 0;
+    assistanceValues.forEach((value) => {
+      total += value;
+    });
+    return total;
+  };
+
+  // Sauvegarder l'assistance pour le meeting courant
+  const handleSaveAssistance = async () => {
+    if (selectedMeeting) {
+      const total = calculateTotalAssistance();
+      const values = participants.map((p) => assistanceValues.get(p.id) ?? 1);
+
+      try {
+        await participantService.saveAssistance(selectedMeeting.id, total, inPersonValue, values);
+        message.success('Assistance sauvegardée');
+      } catch (err) {
+        message.error('Erreur lors de la sauvegarde');
+        console.error(err);
+      }
+    }
+  };
 
   const handleShowParticipants = async (meeting: Meeting) => {
     setSelectedMeeting(meeting);
@@ -45,8 +105,48 @@ function Meetings() {
     setLoadingParticipants(true);
 
     try {
-      const data = await participantService.getParticipants(meeting.id);
-      setParticipants(data);
+      const response = await participantService.getParticipants(meeting.id);
+      setParticipants(response.participants);
+      setInPersonValue(response.inPersonTotal ?? 0);
+
+      // Charger les données du sondage d'assistance s'il existe
+      const attendanceMap = new Map<string, string>();
+      try {
+        const pollData = await meetingService.getMeetingPolls(meeting.id);
+        if (pollData && pollData.participants) {
+          pollData.participants.forEach((participant) => {
+            // Trouver la réponse à la question d'assistance
+            const attendanceQuestion = participant.question_details.find(
+              (qd) =>
+                qd.question === 'Combien de personnes sont présentes avec vous (y compris vous) ?'
+            );
+            if (attendanceQuestion) {
+              // Utiliser le nom du participant comme clé
+              attendanceMap.set(participant.name, attendanceQuestion.answer);
+            }
+          });
+          setAttendancePollData(attendanceMap);
+        } else {
+          setAttendancePollData(new Map());
+        }
+      } catch (pollErr) {
+        setAttendancePollData(new Map());
+      }
+
+      // Initialiser les valeurs d'assistance selon les règles
+      const initialAssistance = new Map<number, number>();
+
+      response.participants.forEach((p, index) => {
+        // Utiliser la valeur sauvegardée si elle existe dans assistanceValue du backend
+        if (p.assistanceValue !== null && p.assistanceValue !== undefined) {
+          initialAssistance.set(p.id, p.assistanceValue);
+        } else {
+          // Sinon calculer selon les règles
+          const pollAnswer = attendanceMap.get(p.name);
+          initialAssistance.set(p.id, calculateInitialAssistance(p.name, pollAnswer));
+        }
+      });
+      setAssistanceValues(initialAssistance);
     } catch (err) {
       message.error('Erreur lors du chargement des participants');
       console.error(err);
@@ -60,8 +160,47 @@ function Meetings() {
 
     setLoadingParticipants(true);
     try {
-      const data = await participantService.refreshParticipants(selectedMeeting.id);
-      setParticipants(data);
+      const response = await participantService.refreshParticipants(selectedMeeting.id);
+      setParticipants(response.participants);
+      setInPersonValue(response.inPersonTotal ?? 0);
+
+      // Recharger les données du sondage d'assistance
+      const attendanceMap = new Map<string, string>();
+      try {
+        const pollData = await meetingService.getMeetingPolls(selectedMeeting.id);
+        if (pollData && pollData.participants) {
+          pollData.participants.forEach((participant) => {
+            const attendanceQuestion = participant.question_details.find(
+              (qd) =>
+                qd.question === 'Combien de personnes sont présentes avec vous (y compris vous) ?'
+            );
+            if (attendanceQuestion) {
+              attendanceMap.set(participant.name, attendanceQuestion.answer);
+            }
+          });
+          setAttendancePollData(attendanceMap);
+        } else {
+          setAttendancePollData(new Map());
+        }
+      } catch (pollErr) {
+        setAttendancePollData(new Map());
+      }
+
+      // Réinitialiser les valeurs d'assistance selon les règles
+      const initialAssistance = new Map<number, number>();
+
+      response.participants.forEach((p, index) => {
+        // Utiliser la valeur sauvegardée si elle existe dans assistanceValue du backend
+        if (p.assistanceValue !== null && p.assistanceValue !== undefined) {
+          initialAssistance.set(p.id, p.assistanceValue);
+        } else {
+          // Sinon calculer selon les règles
+          const pollAnswer = attendanceMap.get(p.name);
+          initialAssistance.set(p.id, calculateInitialAssistance(p.name, pollAnswer));
+        }
+      });
+      setAssistanceValues(initialAssistance);
+
       message.success('Participants actualisés depuis Zoom');
     } catch (err) {
       message.error("Erreur lors de l'actualisation des participants");
@@ -135,6 +274,15 @@ function Meetings() {
     return `${mins}min`;
   };
 
+  const handleAssistanceChange = (participantId: number, value: number | null) => {
+    if (value !== null && value >= 0 && value < 100) {
+      setAssistanceValues((prev) => new Map(prev).set(participantId, value));
+    }
+  };
+
+  // Vérifier si le sondage d'assistance existe
+  const hasAttendancePoll = attendancePollData.size > 0;
+
   const participantColumns: ColumnsType<Participant> = [
     {
       title: 'Nom',
@@ -143,6 +291,38 @@ function Meetings() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       defaultSortOrder: 'ascend',
     },
+    ...(showAssistanceColumns
+      ? [
+          {
+            title: 'Assistance',
+            key: 'assistance',
+            width: 120,
+            render: (_: unknown, record: Participant) => (
+              <input
+                type="number"
+                min="0"
+                max="99"
+                value={assistanceValues.get(record.id) ?? 1}
+                onChange={(e) => handleAssistanceChange(record.id, Number.parseInt(e.target.value))}
+                style={{ width: '60px', textAlign: 'center' }}
+              />
+            ),
+          },
+        ]
+      : []),
+    ...(showAssistanceColumns && hasAttendancePoll
+      ? [
+          {
+            title: 'Sondage',
+            key: 'poll',
+            width: 100,
+            render: (_: unknown, record: Participant) => {
+              const pollAnswer = attendancePollData.get(record.name);
+              return pollAnswer ? pollAnswer.charAt(0) : '-';
+            },
+          },
+        ]
+      : []),
     {
       title: 'Durée de présence',
       dataIndex: 'durationMinutes',
@@ -285,13 +465,60 @@ function Meetings() {
 
       <Modal
         title={
-          <Space>
-            <TeamOutlined />
-            Participants - {selectedMeeting?.topic || 'Meeting'}
-          </Space>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingRight: '40px',
+            }}
+          >
+            <Space>
+              <TeamOutlined />
+              Participants - {selectedMeeting?.topic || 'Meeting'}
+            </Space>
+            <Space>
+              <span style={{ fontSize: '14px', fontWeight: 'normal' }}>Assistance</span>
+              <Switch
+                checked={showAssistanceColumns}
+                onChange={setShowAssistanceColumns}
+                size="small"
+              />
+              {showAssistanceColumns && (
+                <>
+                  <span style={{ fontSize: '14px', fontWeight: 'normal', marginLeft: '8px' }}>
+                    En présentiel:
+                  </span>
+                  <InputNumber
+                    min={0}
+                    max={999}
+                    value={inPersonValue}
+                    onChange={(value) => setInPersonValue(value ?? 0)}
+                    size="small"
+                    style={{ width: '70px' }}
+                  />
+                  <span style={{ fontSize: '14px', fontWeight: 'bold', marginLeft: '8px' }}>
+                    En visioconférence: {calculateTotalAssistance()}
+                  </span>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<SaveOutlined />}
+                    onClick={handleSaveAssistance}
+                  >
+                    Sauvegarder
+                  </Button>
+                </>
+              )}
+            </Space>
+          </div>
         }
         open={participantsModalVisible}
-        onCancel={() => setParticipantsModalVisible(false)}
+        onCancel={() => {
+          setParticipantsModalVisible(false);
+          setShowAssistanceColumns(false);
+          setInPersonValue(0);
+        }}
         width={1000}
         footer={[
           <Button
@@ -302,7 +529,14 @@ function Meetings() {
           >
             Actualiser depuis Zoom
           </Button>,
-          <Button key="close" onClick={() => setParticipantsModalVisible(false)}>
+          <Button
+            key="close"
+            onClick={() => {
+              setParticipantsModalVisible(false);
+              setShowAssistanceColumns(false);
+              setInPersonValue(0);
+            }}
+          >
             Fermer
           </Button>,
         ]}

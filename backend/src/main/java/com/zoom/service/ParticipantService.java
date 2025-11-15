@@ -6,11 +6,9 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.zoom.dto.ZoomParticipant;
-import com.zoom.entity.Meeting;
-import com.zoom.entity.Participant;
-import com.zoom.repository.MeetingRepository;
-import com.zoom.repository.ParticipantRepository;
+import com.zoom.dto.*;
+import com.zoom.entity.*;
+import com.zoom.repository.*;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,13 +25,14 @@ public class ParticipantService {
     private final ParticipantRepository participantRepository;
     private final MeetingRepository meetingRepository;
     private final ZoomApiService zoomApiService;
+    private final MeetingAssistanceRepository meetingAssistanceRepository;
 
     /**
-     * Récupère les participants d'un meeting
+     * Récupère les participants d'un meeting avec leurs valeurs d'assistance
      * Si non présents en base, les récupère depuis l'API Zoom et les sauvegarde
      */
     @Transactional
-    public List<Participant> getParticipants(Long meetingId) {
+    public ParticipantsResponse getParticipants(Long meetingId) {
         log.info("👥 Récupération des participants pour le meeting ID: {}", meetingId);
 
         // Vérifie si le meeting existe
@@ -41,16 +40,41 @@ public class ParticipantService {
                 .orElseThrow(() -> new RuntimeException("Meeting introuvable: " + meetingId));
 
         // Vérifie si on a déjà les participants en base
-        if (participantRepository.existsByMeetingId(meetingId)) {
+        if (!participantRepository.existsByMeetingId(meetingId)) {
+            // Sinon, récupère depuis Zoom
+            log.info("🔄 Synchronisation des participants depuis Zoom pour le meeting {}", meetingId);
+            syncParticipantsFromZoom(meeting);
+        } else {
             log.info("✓ Participants déjà en base pour le meeting {}", meetingId);
-            return participantRepository.findByMeetingId(meetingId);
         }
 
-        // Sinon, récupère depuis Zoom
-        log.info("🔄 Synchronisation des participants depuis Zoom pour le meeting {}", meetingId);
-        syncParticipantsFromZoom(meeting);
+        List<Participant> participants = participantRepository.findByMeetingId(meetingId);
 
-        return participantRepository.findByMeetingId(meetingId);
+        // Récupérer les valeurs d'assistance sauvegardées
+        Optional<MeetingAssistance> assistanceOpt = meetingAssistanceRepository.findByMeetingId(meetingId);
+        Integer inPersonTotal = assistanceOpt.map(MeetingAssistance::getInPersonTotal).orElse(0);
+
+        List<ParticipantWithAssistance> result = new ArrayList<>();
+        for (int i = 0; i < participants.size(); i++) {
+            Participant p = participants.get(i);
+            Integer assistanceValue = null;
+
+            if (assistanceOpt.isPresent() && i < assistanceOpt.get().getValues().size()) {
+                assistanceValue = assistanceOpt.get().getValues().get(i);
+            }
+
+            result.add(new ParticipantWithAssistance(
+                p.getId(),
+                p.getUserId(),
+                p.getName(),
+                p.getDurationMinutes(),
+                p.getJoinTime(),
+                p.getLeaveTime(),
+                assistanceValue
+            ));
+        }
+
+        return new ParticipantsResponse(result, inPersonTotal);
     }
 
     /**
@@ -135,7 +159,7 @@ public class ParticipantService {
      * Force la re-synchronisation des participants depuis Zoom
      */
     @Transactional
-    public List<Participant> refreshParticipants(Long meetingId) {
+    public ParticipantsResponse refreshParticipants(Long meetingId) {
         log.info("🔄 Re-synchronisation forcée des participants pour le meeting {}", meetingId);
 
         Meeting meeting = meetingRepository.findById(meetingId)
@@ -151,6 +175,6 @@ public class ParticipantService {
         // Re-synchronise
         syncParticipantsFromZoom(meeting);
 
-        return participantRepository.findByMeetingId(meetingId);
+        return getParticipants(meetingId);
     }
 }

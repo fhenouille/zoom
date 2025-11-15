@@ -5,4 +5,5 @@ export interface Participant {
   durationMinutes: number;
   joinTime?: string;
   leaveTime?: string;
+  assistanceValue?: number | null;
 }
