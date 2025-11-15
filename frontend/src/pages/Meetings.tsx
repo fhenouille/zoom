@@ -23,7 +23,7 @@ import {
   Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const { Title } = Typography;
 
@@ -36,6 +36,8 @@ function Meetings() {
   const [pollResults, setPollResults] = useState<PollResponse | null>(null);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [loadingPolls, setLoadingPolls] = useState(false);
+  const [pollsAvailability, setPollsAvailability] = useState<Map<number, boolean>>(new Map());
+  const [checkingPolls, setCheckingPolls] = useState<Set<number>>(new Set());
 
   const handleShowParticipants = async (meeting: Meeting) => {
     setSelectedMeeting(meeting);
@@ -88,6 +90,41 @@ function Meetings() {
       setLoadingPolls(false);
     }
   };
+
+  const checkPollsAvailability = async (meetingId: number) => {
+    if (pollsAvailability.has(meetingId) || checkingPolls.has(meetingId)) {
+      return;
+    }
+
+    setCheckingPolls((prev) => new Set(prev).add(meetingId));
+
+    try {
+      const data = await meetingService.getMeetingPolls(meetingId);
+      setPollsAvailability((prev) =>
+        new Map(prev).set(
+          meetingId,
+          data !== null && data.participants && data.participants.length > 0
+        )
+      );
+    } catch (err) {
+      setPollsAvailability((prev) => new Map(prev).set(meetingId, false));
+    } finally {
+      setCheckingPolls((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(meetingId);
+        return newSet;
+      });
+    }
+  };
+
+  // Vérifier la disponibilité des sondages en arrière-plan au chargement
+  useEffect(() => {
+    if (meetings && meetings.length > 0) {
+      meetings.forEach((meeting) => {
+        checkPollsAvailability(meeting.id);
+      });
+    }
+  }, [meetings]);
 
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -182,20 +219,37 @@ function Meetings() {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: unknown, record: Meeting) => (
-        <Space>
-          <Button
-            type="primary"
-            icon={<TeamOutlined />}
-            onClick={() => handleShowParticipants(record)}
-          >
-            Participants
-          </Button>
-          <Button icon={<BarChartOutlined />} onClick={() => handleShowPolls(record)}>
-            Sondages
-          </Button>
-        </Space>
-      ),
+      render: (_: unknown, record: Meeting) => {
+        const hasPoll = pollsAvailability.get(record.id);
+        const isChecking = checkingPolls.has(record.id);
+
+        return (
+          <Space>
+            <Button
+              type="primary"
+              icon={<TeamOutlined />}
+              onClick={() => handleShowParticipants(record)}
+            >
+              Participants
+            </Button>
+            <Button
+              icon={<BarChartOutlined />}
+              onClick={() => handleShowPolls(record)}
+              disabled={hasPoll !== true}
+              loading={isChecking}
+              title={
+                hasPoll === false
+                  ? 'Aucun sondage disponible'
+                  : hasPoll === true
+                  ? 'Afficher les sondages'
+                  : 'Vérification en cours...'
+              }
+            >
+              Sondages
+            </Button>
+          </Space>
+        );
+      },
     },
   ];
 
