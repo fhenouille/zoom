@@ -6,10 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.zoom.dto.ZoomPollResponse;
 import com.zoom.entity.Meeting;
 import com.zoom.entity.Participant;
-import com.zoom.service.MeetingService;
-import com.zoom.service.ParticipantService;
+import com.zoom.service.*;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,7 @@ public class MeetingController {
 
     private final MeetingService meetingService;
     private final ParticipantService participantService;
+    private final ZoomApiService zoomApiService;
 
     /**
      * Récupère toutes les réunions
@@ -150,5 +151,33 @@ public class MeetingController {
             id, participants.size(), duration);
 
         return ResponseEntity.ok(participants);
+    }
+
+    /**
+     * Récupère les résultats des sondages d'un meeting depuis l'API Zoom
+     */
+    @GetMapping("/{id}/polls")
+    public ResponseEntity<ZoomPollResponse> getMeetingPolls(@PathVariable Long id) {
+        log.info("📥 GET /api/meetings/{}/polls - Récupération des résultats de sondage", id);
+        long startTime = System.currentTimeMillis();
+
+        // Récupère le meeting pour obtenir le UUID
+        Meeting meeting = meetingService.getMeetingById(id)
+                .orElseThrow(() -> new RuntimeException("Meeting non trouvé avec l'ID: " + id));
+
+        // Récupère les résultats de sondage depuis Zoom
+        ZoomPollResponse pollResponse = zoomApiService.getPollResults(meeting.getZoomUuid());
+
+        long duration = System.currentTimeMillis() - startTime;
+
+        if (pollResponse == null || pollResponse.getParticipants() == null || pollResponse.getParticipants().isEmpty()) {
+            log.info("📤 GET /api/meetings/{}/polls - Aucun sondage trouvé en {}ms", id, duration);
+            return ResponseEntity.noContent().build();
+        }
+
+        log.info("📤 GET /api/meetings/{}/polls - Réponse: {} réponses au sondage en {}ms",
+            id, pollResponse.getParticipants().size(), duration);
+
+        return ResponseEntity.ok(pollResponse);
     }
 }

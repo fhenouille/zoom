@@ -2,7 +2,8 @@ package com.zoom.repository;
 
 import java.util.List;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.zoom.entity.Participant;
@@ -25,6 +26,9 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 
     /**
      * Supprime tous les participants d'un meeting
+     * Utilise @Modifying et @Query pour forcer l'exécution immédiate
      */
-    void deleteByMeetingId(Long meetingId);
+    @Modifying
+    @Query("DELETE FROM Participant p WHERE p.meeting.id = :meetingId")
+    void deleteByMeetingId(@Param("meetingId") Long meetingId);
 }

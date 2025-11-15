@@ -300,4 +300,63 @@ public class ZoomApiService {
             throw new RuntimeException("Erreur lors de la récupération des participants: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Récupère les résultats des sondages pour une session de meeting
+     * @param meetingUuid UUID de la session (encodé)
+     * @return Liste des réponses aux sondages
+     */
+    public ZoomPollResponse getPollResults(String meetingUuid) {
+        log.info("📊 Récupération des résultats de sondage pour l'UUID: {}", meetingUuid);
+
+        String token = getAccessToken();
+
+        try {
+            // Encode l'UUID une seule fois (comme pour les participants)
+            String encodedOnce = java.net.URLEncoder.encode(meetingUuid, "UTF-8");
+
+            log.info("🔐 UUID encodé 1x: {}", encodedOnce);
+
+            // Construit l'URL
+            String fullUrl = config.getBaseUrl() + "/report/meetings/" + encodedOnce + "/polls";
+
+            log.info("📡 URL sondage: {}", fullUrl);
+
+            // Convertit en URI pour éviter le double encodage par WebClient
+            java.net.URI uri = java.net.URI.create(fullUrl);
+
+            ZoomPollResponse response = WebClient.create()
+                    .get()
+                    .uri(uri)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .bodyToMono(ZoomPollResponse.class)
+                    .block();
+
+            if (response != null && response.getParticipants() != null) {
+                log.info("✅ {} réponses de sondage récupérées", response.getParticipants().size());
+            } else {
+                log.info("ℹ️ Aucun sondage trouvé pour cette session");
+            }
+
+            return response;
+
+        } catch (WebClientResponseException e) {
+            log.error("❌ Erreur HTTP {} lors de la récupération des sondages", e.getStatusCode());
+            log.error("❌ Message d'erreur Zoom: {}", e.getResponseBodyAsString());
+
+            // Si 404, c'est qu'il n'y a pas de sondage
+            if (e.getStatusCode().value() == 404) {
+                log.info("ℹ️ Aucun sondage disponible pour cette session");
+                return null;
+            }
+
+            throw new RuntimeException("Erreur lors de la récupération des sondages: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de la récupération des sondages: {}", e.getMessage());
+            log.debug("Stack trace complète:", e);
+            throw new RuntimeException("Erreur lors de la récupération des sondages: " + e.getMessage(), e);
+        }
+    }
 }
+
