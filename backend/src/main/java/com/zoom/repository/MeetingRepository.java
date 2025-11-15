@@ -26,6 +26,11 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
     List<Meeting> findByStartAfter(LocalDateTime date);
 
     /**
+     * Trouve toutes les réunions avant une date donnée
+     */
+    List<Meeting> findByStartBefore(LocalDateTime date);
+
+    /**
      * Trouve une réunion par son ID Zoom
      */
     Optional<Meeting> findByZoomMeetingId(String zoomMeetingId);

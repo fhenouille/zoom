@@ -1,4 +1,3 @@
-import { useMeetings } from '@/hooks/useMeetings';
 import { meetingService, PollResponse } from '@/services/meetingService';
 import { participantService } from '@/services/participantService';
 import { Meeting } from '@/types/meeting';
@@ -9,11 +8,13 @@ import {
   ClockCircleOutlined,
   ReloadOutlined,
   SaveOutlined,
+  SearchOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
 import {
   Button,
   Card,
+  DatePicker,
   Descriptions,
   InputNumber,
   message,
@@ -26,12 +27,14 @@ import {
   Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import dayjs, { Dayjs } from 'dayjs';
 import { useEffect, useState } from 'react';
 
 const { Title } = Typography;
 
 function Meetings() {
-  const { meetings, isLoading, error } = useMeetings();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const [participantsModalVisible, setParticipantsModalVisible] = useState(false);
   const [pollsModalVisible, setPollsModalVisible] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
@@ -45,6 +48,9 @@ function Meetings() {
   const [attendancePollData, setAttendancePollData] = useState<Map<string, string>>(new Map());
   const [showAssistanceColumns, setShowAssistanceColumns] = useState(false);
   const [inPersonValue, setInPersonValue] = useState<number>(0);
+  const [startDate, setStartDate] = useState<Dayjs>(dayjs().subtract(7, 'days'));
+  const [endDate, setEndDate] = useState<Dayjs>(dayjs());
+  const [filteredMeetings, setFilteredMeetings] = useState<Meeting[]>([]);
 
   // Fonction pour calculer la valeur initiale d'assistance selon les règles de priorité
   const calculateInitialAssistance = (name: string, pollAnswer?: string): number => {
@@ -242,7 +248,7 @@ function Meetings() {
       setPollsAvailability((prev) =>
         new Map(prev).set(
           meetingId,
-          data !== null && data.participants && data.participants.length > 0
+          data !== null && data?.participants && data.participants.length > 0
         )
       );
     } catch (err) {
@@ -256,14 +262,44 @@ function Meetings() {
     }
   };
 
-  // Vérifier la disponibilité des sondages en arrière-plan au chargement
+  // Charger les meetings avec les filtres au démarrage
   useEffect(() => {
-    if (meetings && meetings.length > 0) {
-      meetings.forEach((meeting) => {
-        checkPollsAvailability(meeting.id);
+    handleSearch();
+  }, []);
+
+  // Vérifier la disponibilité des sondages après le chargement des meetings filtrés
+  // Avec un délai progressif pour éviter les erreurs 429 (rate limiting)
+  useEffect(() => {
+    if (filteredMeetings && filteredMeetings.length > 0) {
+      filteredMeetings.forEach((meeting, index) => {
+        // Délai de 500ms entre chaque vérification pour respecter les limites de l'API Zoom
+        setTimeout(() => {
+          checkPollsAvailability(meeting.id);
+        }, index * 500);
       });
     }
-  }, [meetings]);
+  }, [filteredMeetings]);
+
+  // Fonction de recherche avec filtres
+  const handleSearch = async () => {
+    setIsLoading(true);
+    setError(null);
+    // Réinitialiser la vérification des polls
+    setPollsAvailability(new Map());
+    setCheckingPolls(new Set());
+    try {
+      const startDateStr = startDate.toISOString();
+      const endDateStr = endDate.toISOString();
+      const data = await meetingService.getAllMeetings(startDateStr, endDateStr);
+      setFilteredMeetings(data);
+    } catch (err) {
+      setError(err as Error);
+      message.error('Erreur lors du chargement des réunions');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -361,6 +397,8 @@ function Meetings() {
       title: 'Début',
       dataIndex: 'start',
       key: 'start',
+      defaultSortOrder: 'descend' as const,
+      sorter: (a: Meeting, b: Meeting) => new Date(a.start).getTime() - new Date(b.start).getTime(),
       render: (date: string) => (
         <Space>
           <CalendarOutlined />
@@ -403,6 +441,9 @@ function Meetings() {
         const hasPoll = pollsAvailability.get(record.id);
         const isChecking = checkingPolls.has(record.id);
 
+        // Logique inversée : bouton grisé par défaut, actif uniquement si hasPoll === true
+        const isPollButtonDisabled = hasPoll !== true;
+
         return (
           <Space>
             <Button
@@ -415,7 +456,7 @@ function Meetings() {
             <Button
               icon={<BarChartOutlined />}
               onClick={() => handleShowPolls(record)}
-              disabled={hasPoll !== true}
+              disabled={isPollButtonDisabled}
               loading={isChecking}
               title={
                 hasPoll === false
@@ -449,10 +490,43 @@ function Meetings() {
         <CalendarOutlined /> Liste des Réunions
       </Title>
 
+      <Card style={{ marginBottom: 16 }}>
+        <Space size="large">
+          <Space direction="vertical" size="small">
+            <label>Date de début</label>
+            <DatePicker
+              showTime
+              value={startDate}
+              onChange={(date) => date && setStartDate(date)}
+              format="DD/MM/YYYY HH:mm"
+              placeholder="Sélectionnez une date"
+            />
+          </Space>
+          <Space direction="vertical" size="small">
+            <label>Date de fin</label>
+            <DatePicker
+              showTime
+              value={endDate}
+              onChange={(date) => date && setEndDate(date)}
+              format="DD/MM/YYYY HH:mm"
+              placeholder="Sélectionnez une date"
+            />
+          </Space>
+          <Button
+            type="primary"
+            icon={<SearchOutlined />}
+            onClick={handleSearch}
+            style={{ marginTop: 22 }}
+          >
+            Rechercher
+          </Button>
+        </Space>
+      </Card>
+
       <Card>
         <Table
           columns={columns}
-          dataSource={meetings}
+          dataSource={filteredMeetings}
           loading={isLoading}
           rowKey="id"
           pagination={{

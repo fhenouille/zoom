@@ -42,17 +42,55 @@ public class MeetingService {
     }
 
     /**
-     * Synchronise les meetings depuis l'API Zoom
-     * Récupère les meetings passés des 5 derniers jours et les ajoute s'ils ne sont pas déjà en base
+     * Récupère les réunions filtrées par date
+     * Synchronise toujours avec Zoom d'abord, puis applique les filtres si fournis
+     */
+    @Transactional
+    public List<Meeting> getMeetingsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        log.info("Récupération des réunions (startDate: {}, endDate: {})", startDate, endDate);
+
+        // Synchronise avec Zoom en utilisant les dates du filtre (ou par défaut 5 derniers jours)
+        if (startDate != null && endDate != null) {
+            syncMeetingsFromZoom(startDate.toLocalDate(), endDate.toLocalDate());
+        } else {
+            syncMeetingsFromZoom();
+        }
+
+        // Si aucun filtre n'est fourni, retourne tout
+        if (startDate == null && endDate == null) {
+            return meetingRepository.findAll();
+        }
+
+        // Filtre par date
+        if (startDate != null && endDate != null) {
+            return meetingRepository.findByStartBetween(startDate, endDate);
+        } else if (startDate != null) {
+            return meetingRepository.findByStartAfter(startDate);
+        } else {
+            return meetingRepository.findByStartBefore(endDate);
+        }
+    }
+
+    /**
+     * Synchronise les meetings depuis l'API Zoom (par défaut 5 derniers jours)
      */
     public void syncMeetingsFromZoom() {
+        LocalDate today = LocalDate.now();
+        LocalDate fiveDaysAgo = today.minusDays(5);
+        syncMeetingsFromZoom(fiveDaysAgo, today);
+    }
+
+    /**
+     * Synchronise les meetings depuis l'API Zoom pour une période donnée
+     */
+    public void syncMeetingsFromZoom(LocalDate fromDate, LocalDate toDate) {
         try {
-            log.info("🔄 Synchronisation des meetings depuis Zoom");
+            log.info("🔄 Synchronisation des meetings depuis Zoom ({} à {})", fromDate, toDate);
             long startTime = System.currentTimeMillis();
 
-            // Récupère les meetings depuis Zoom
+            // Récupère les meetings depuis Zoom pour la période demandée
             log.debug("⏳ Appel de l'API Zoom...");
-            List<ZoomMeeting> zoomMeetings = zoomApiService.getPastMeetings();
+            List<ZoomMeeting> zoomMeetings = zoomApiService.getPastMeetings(fromDate, toDate);
             log.info("📥 {} meetings reçus de Zoom", zoomMeetings.size());
 
             int newMeetingsCount = 0;

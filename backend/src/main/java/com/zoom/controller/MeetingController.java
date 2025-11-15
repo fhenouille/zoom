@@ -2,6 +2,7 @@ package com.zoom.controller;
 
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,14 +33,16 @@ public class MeetingController {
     private final MeetingAssistanceRepository meetingAssistanceRepository;
 
     /**
-     * Récupère toutes les réunions
+     * Récupère toutes les réunions avec filtres optionnels de date
      */
     @GetMapping
-    public ResponseEntity<List<Meeting>> getAllMeetings() {
-        log.info("📥 GET /api/meetings - Récupération de toutes les réunions");
+    public ResponseEntity<List<Meeting>> getAllMeetings(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endDate) {
+        log.info("📥 GET /api/meetings - Récupération des réunions (startDate: {}, endDate: {})", startDate, endDate);
         long startTime = System.currentTimeMillis();
 
-        List<Meeting> meetings = meetingService.getAllMeetings();
+        List<Meeting> meetings = meetingService.getMeetingsByDateRange(startDate, endDate);
 
         long duration = System.currentTimeMillis() - startTime;
         log.info("📤 GET /api/meetings - Réponse: {} meetings en {}ms", meetings.size(), duration);

@@ -134,25 +134,31 @@ public class ZoomApiService {
      * Utilise l'API Report pour obtenir les instances/sessions réelles des meetings
      */
     public List<ZoomMeeting> getPastMeetings() {
-        log.info("📅 Récupération des meetings passés des 5 derniers jours depuis Zoom");
+        LocalDate today = LocalDate.now();
+        LocalDate fiveDaysAgo = today.minusDays(5);
+        return getPastMeetings(fiveDaysAgo, today);
+    }
+
+    /**
+     * Récupère les meetings passés de l'utilisateur pour une période donnée
+     * Utilise l'API Report pour obtenir les instances/sessions réelles des meetings
+     */
+    public List<ZoomMeeting> getPastMeetings(LocalDate fromDate, LocalDate toDate) {
+        log.info("📅 Récupération des meetings depuis Zoom entre {} et {}", fromDate, toDate);
 
         String token = getAccessToken();
 
-        // Calcule les dates (5 derniers jours)
-        LocalDate today = LocalDate.now();
-        LocalDate fiveDaysAgo = today.minusDays(5);
-
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
-        String fromDate = fiveDaysAgo.format(formatter);
-        String toDate = today.format(formatter);
+        String fromDateStr = fromDate.format(formatter);
+        String toDateStr = toDate.format(formatter);
 
-        log.info("📆 Recherche des meetings entre {} et {}", fromDate, toDate);
+        log.info("📆 Recherche des meetings entre {} et {}", fromDateStr, toDateStr);
         log.debug("User ID: {}", config.getUserId());
 
         try {
             // Utilise l'endpoint /report pour récupérer les instances réelles des meetings
             String url = config.getBaseUrl() + "/report/users/" + config.getUserId() + "/meetings" +
-                    "?from=" + fromDate + "&to=" + toDate + "&page_size=300";
+                    "?from=" + fromDateStr + "&to=" + toDateStr + "&page_size=300";
 
             log.debug("Base URL construite: {}", url);
 

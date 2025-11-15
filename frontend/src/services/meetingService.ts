@@ -25,10 +25,16 @@ export interface PollResponse {
 
 export const meetingService = {
   /**
-   * Récupère toutes les réunions
+   * Récupère toutes les réunions avec filtres optionnels de date
    */
-  getAllMeetings: async (): Promise<Meeting[]> => {
-    const response = await apiClient.get<Meeting[]>('/meetings');
+  getAllMeetings: async (startDate?: string, endDate?: string): Promise<Meeting[]> => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+
+    const response = await apiClient.get<Meeting[]>(
+      `/meetings${params.toString() ? `?${params.toString()}` : ''}`
+    );
     return response.data;
   },
 
