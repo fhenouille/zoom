@@ -62,7 +62,7 @@ public class ParticipantService {
             // Utilisons l'UUID (identifiant unique de la session)
             String meetingIdentifier = meeting.getZoomUuid();
             log.info("🔍 Utilisation de l'UUID: {}", meetingIdentifier);
-            
+
             // Récupère les participants depuis Zoom
             List<ZoomParticipant> zoomParticipants = zoomApiService.getMeetingParticipants(meetingIdentifier);
 

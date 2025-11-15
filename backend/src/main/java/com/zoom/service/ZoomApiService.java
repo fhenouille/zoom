@@ -233,7 +233,7 @@ public class ZoomApiService {
             // Double-encode l'UUID selon la documentation Zoom
             String encodedOnce = java.net.URLEncoder.encode(meetingUuid, "UTF-8");
             String encodedTwice = java.net.URLEncoder.encode(encodedOnce, "UTF-8");
-            
+
             log.info("🔐 UUID original: {}", meetingUuid);
             log.info("🔐 UUID encodé 1x: {}", encodedOnce);
             log.info("🔐 UUID encodé 2x: {}", encodedTwice);
@@ -246,18 +246,18 @@ public class ZoomApiService {
             do {
                 final int currentPage = pageNumber;
                 final String currentToken = nextPageToken;
-                
+
                 // Construit l'URL avec l'endpoint REPORT au lieu de past_meetings
                 String fullUrl = config.getBaseUrl() + "/report/meetings/" + encodedTwice + "/participants?page_size=300";
                 if (currentToken != null && !currentToken.isEmpty()) {
                     fullUrl += "&next_page_token=" + java.net.URLEncoder.encode(currentToken, "UTF-8");
                 }
-                
+
                 log.info("📡 [Page {}] URL complète: {}", currentPage, fullUrl);
 
                 // Convertit en URI pour éviter le ré-encodage par WebClient
                 java.net.URI uri = java.net.URI.create(fullUrl);
-                
+
                 // Crée un WebClient SANS baseUrl pour cette requête spécifique
                 ZoomParticipantResponse response = WebClient.create()
                         .get()
