@@ -68,16 +68,16 @@ public class ParticipantService {
 
             log.info("📥 {} enregistrements de participation reçus de Zoom", zoomParticipants.size());
 
-            // Regroupe par utilisateur et calcule le cumul de présence
-            Map<String, List<ZoomParticipant>> participantsByUser = zoomParticipants.stream()
-                    .collect(Collectors.groupingBy(p -> p.getUserId() != null ? p.getUserId() : p.getName()));
+            // Regroupe par NOM (et non par userId) pour agréger toutes les connexions d'une même personne
+            Map<String, List<ZoomParticipant>> participantsByName = zoomParticipants.stream()
+                    .collect(Collectors.groupingBy(ZoomParticipant::getName));
 
-            log.info("👤 {} utilisateurs uniques identifiés", participantsByUser.size());
+            log.info("👤 {} participants uniques identifiés (par nom)", participantsByName.size());
 
             List<Participant> participants = new ArrayList<>();
 
-            for (Map.Entry<String, List<ZoomParticipant>> entry : participantsByUser.entrySet()) {
-                String userId = entry.getKey();
+            for (Map.Entry<String, List<ZoomParticipant>> entry : participantsByName.entrySet()) {
+                String participantName = entry.getKey();
                 List<ZoomParticipant> userConnections = entry.getValue();
 
                 // Calcule la durée totale (somme de toutes les connexions)
@@ -87,8 +87,10 @@ public class ParticipantService {
 
                 int totalDurationMinutes = totalDurationSeconds / 60;
 
-                // Prend les infos du premier enregistrement (nom, email)
-                ZoomParticipant firstConnection = userConnections.get(0);
+                // Prend le userId du premier enregistrement (pour la clé unique)
+                String userId = userConnections.get(0).getUserId() != null 
+                    ? userConnections.get(0).getUserId() 
+                    : participantName;
 
                 // Trouve la première connexion et la dernière déconnexion
                 String firstJoinTime = userConnections.stream()
@@ -107,7 +109,7 @@ public class ParticipantService {
                 Participant participant = new Participant();
                 participant.setMeeting(meeting);
                 participant.setUserId(userId);
-                participant.setName(firstConnection.getName());
+                participant.setName(participantName);
                 participant.setDurationMinutes(totalDurationMinutes);
                 participant.setJoinTime(firstJoinTime);
                 participant.setLeaveTime(lastLeaveTime);
@@ -115,7 +117,7 @@ public class ParticipantService {
                 participants.add(participant);
 
                 log.debug("  ✓ {} - Durée totale: {}min (sur {} connexion(s))",
-                    firstConnection.getName(), totalDurationMinutes, userConnections.size());
+                    participantName, totalDurationMinutes, userConnections.size());
             }
 
             // Sauvegarde tous les participants
