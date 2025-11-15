@@ -7,7 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.zoom.entity.Meeting;
+import com.zoom.entity.Participant;
 import com.zoom.service.MeetingService;
+import com.zoom.service.ParticipantService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MeetingController {
 
     private final MeetingService meetingService;
+    private final ParticipantService participantService;
 
     /**
      * Récupère toutes les réunions
@@ -112,5 +115,40 @@ public class MeetingController {
         log.info("GET /api/meetings/upcoming - Récupération des réunions à venir");
         List<Meeting> meetings = meetingService.getUpcomingMeetings();
         return ResponseEntity.ok(meetings);
+    }
+
+    /**
+     * Récupère les participants d'un meeting
+     * Si non présents en base, les récupère depuis l'API Zoom
+     */
+    @GetMapping("/{id}/participants")
+    public ResponseEntity<List<Participant>> getMeetingParticipants(@PathVariable Long id) {
+        log.info("📥 GET /api/meetings/{}/participants - Récupération des participants", id);
+        long startTime = System.currentTimeMillis();
+
+        List<Participant> participants = participantService.getParticipants(id);
+
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("📤 GET /api/meetings/{}/participants - Réponse: {} participants en {}ms",
+            id, participants.size(), duration);
+
+        return ResponseEntity.ok(participants);
+    }
+
+    /**
+     * Force la re-synchronisation des participants depuis Zoom
+     */
+    @PostMapping("/{id}/participants/refresh")
+    public ResponseEntity<List<Participant>> refreshMeetingParticipants(@PathVariable Long id) {
+        log.info("📥 POST /api/meetings/{}/participants/refresh - Re-synchronisation forcée", id);
+        long startTime = System.currentTimeMillis();
+
+        List<Participant> participants = participantService.refreshParticipants(id);
+
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("📤 POST /api/meetings/{}/participants/refresh - Réponse: {} participants en {}ms",
+            id, participants.size(), duration);
+
+        return ResponseEntity.ok(participants);
     }
 }

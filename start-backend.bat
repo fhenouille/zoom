@@ -6,6 +6,26 @@ echo.
 
 cd backend
 
+echo 🔧 Chargement des variables d'environnement Zoom...
+
+for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
+    REM Ignore les lignes vides et les commentaires
+    echo %%a | findstr /r "^#" >nul
+    if errorlevel 1 (
+        set %%a=%%b
+        echo   ✓ %%a défini
+    )
+)
+
+echo ✅ Variables d'environnement chargées avec succès!
+echo.
+echo 📋 Variables définies:
+echo   - ZOOM_ACCOUNT_ID: %ZOOM_ACCOUNT_ID%
+echo   - ZOOM_CLIENT_ID: %ZOOM_CLIENT_ID%
+echo   - ZOOM_CLIENT_SECRET: ****
+echo   - ZOOM_USER_ID: %ZOOM_USER_ID%
+echo   - MEETING_ID: %MEETING_ID%
+
 REM Verifier si Maven est installe
 where mvn >nul 2>&1
 if %ERRORLEVEL% == 0 (

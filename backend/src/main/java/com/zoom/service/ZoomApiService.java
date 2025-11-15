@@ -11,6 +11,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.zoom.config.ZoomApiConfig;
 import com.zoom.dto.*;
@@ -215,6 +216,88 @@ public class ZoomApiService {
             log.error("❌ Erreur lors de la récupération des meetings Zoom: {}", e.getMessage());
             log.debug("Stack trace complète:", e);
             throw new RuntimeException("Erreur lors de la récupération des meetings: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Récupère les participants d'une session spécifique
+     * @param meetingUuid UUID de la session (encode automatiquement les caractères spéciaux)
+     * @return Liste des participants avec leurs connexions/déconnexions
+     */
+    public List<ZoomParticipant> getMeetingParticipants(String meetingUuid) {
+        log.info("👥 Récupération des participants pour la session UUID: {}", meetingUuid);
+
+        String token = getAccessToken();
+
+        try {
+            // Double-encode l'UUID selon la documentation Zoom
+            String encodedOnce = java.net.URLEncoder.encode(meetingUuid, "UTF-8");
+            String encodedTwice = java.net.URLEncoder.encode(encodedOnce, "UTF-8");
+            
+            log.info("🔐 UUID original: {}", meetingUuid);
+            log.info("🔐 UUID encodé 1x: {}", encodedOnce);
+            log.info("🔐 UUID encodé 2x: {}", encodedTwice);
+
+            List<ZoomParticipant> allParticipants = new ArrayList<>();
+            String nextPageToken = null;
+            int pageNumber = 1;
+
+            // Gère la pagination
+            do {
+                final int currentPage = pageNumber;
+                final String currentToken = nextPageToken;
+                
+                // Construit l'URL avec l'endpoint REPORT au lieu de past_meetings
+                String fullUrl = config.getBaseUrl() + "/report/meetings/" + encodedTwice + "/participants?page_size=300";
+                if (currentToken != null && !currentToken.isEmpty()) {
+                    fullUrl += "&next_page_token=" + java.net.URLEncoder.encode(currentToken, "UTF-8");
+                }
+                
+                log.info("📡 [Page {}] URL complète: {}", currentPage, fullUrl);
+
+                // Convertit en URI pour éviter le ré-encodage par WebClient
+                java.net.URI uri = java.net.URI.create(fullUrl);
+                
+                // Crée un WebClient SANS baseUrl pour cette requête spécifique
+                ZoomParticipantResponse response = WebClient.create()
+                        .get()
+                        .uri(uri)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .retrieve()
+                        .bodyToMono(ZoomParticipantResponse.class)
+                        .block();
+
+                if (response != null) {
+                    log.debug("📊 [Page {}] Détails réponse - total_records={}",
+                        pageNumber, response.getTotalRecords());
+
+                    if (response.getParticipants() != null) {
+                        log.info("✓ [Page {}] {} participants trouvés", pageNumber, response.getParticipants().size());
+                        allParticipants.addAll(response.getParticipants());
+                        nextPageToken = response.getNextPageToken();
+                    } else {
+                        nextPageToken = null;
+                    }
+                } else {
+                    nextPageToken = null;
+                }
+
+                pageNumber++;
+
+            } while (nextPageToken != null && !nextPageToken.isEmpty());
+
+            log.info("✅ Total de {} participants récupérés", allParticipants.size());
+            return allParticipants;
+
+        } catch (WebClientResponseException e) {
+            log.error("❌ Erreur HTTP {} lors de la récupération des participants", e.getStatusCode());
+            log.error("❌ Message d'erreur Zoom: {}", e.getResponseBodyAsString());
+            log.debug("Stack trace complète:", e);
+            throw new RuntimeException("Erreur lors de la récupération des participants: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de la récupération des participants: {}", e.getMessage());
+            log.debug("Stack trace complète:", e);
+            throw new RuntimeException("Erreur lors de la récupération des participants: " + e.getMessage(), e);
         }
     }
 }
