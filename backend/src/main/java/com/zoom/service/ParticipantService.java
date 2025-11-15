@@ -88,8 +88,8 @@ public class ParticipantService {
                 int totalDurationMinutes = totalDurationSeconds / 60;
 
                 // Prend le userId du premier enregistrement (pour la clé unique)
-                String userId = userConnections.get(0).getUserId() != null 
-                    ? userConnections.get(0).getUserId() 
+                String userId = userConnections.get(0).getUserId() != null
+                    ? userConnections.get(0).getUserId()
                     : participantName;
 
                 // Trouve la première connexion et la dernière déconnexion
