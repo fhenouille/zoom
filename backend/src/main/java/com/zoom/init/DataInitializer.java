@@ -39,12 +39,6 @@ public class DataInitializer implements CommandLineRunner {
             adminUser.setZoomAccountId(zoomAccountId);
 
             userRepository.save(adminUser);
-
-            log.info("👤 Utilisateur par défaut créé:");
-            log.info("   Username: admin");
-            log.info("   Password: z00Mons");
-            log.info("   Zoom User ID: {}", zoomUserId);
-            log.info("   Zoom Account ID: {}", zoomAccountId);
         }
     }
 }

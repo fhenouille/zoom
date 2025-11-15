@@ -14,7 +14,7 @@ function Home() {
           <RocketOutlined /> Bienvenue sur Zoom Meetings
         </Title>
         <Paragraph style={{ fontSize: '18px', color: '#666' }}>
-          Gérez vos réunions simplement et efficacement
+          Gérez l'assistance simplement et efficacement
         </Paragraph>
       </div>
 
@@ -22,13 +22,12 @@ function Home() {
         <Col xs={24} md={12}>
           <Card
             hoverable
-            title="Réunions à venir"
+            title="Affichage des réunions"
             extra={<CalendarOutlined />}
             style={{ height: '100%' }}
           >
             <Paragraph>
-              Consultez la liste de toutes vos réunions planifiées. Visualisez les horaires et gérez
-              votre emploi du temps.
+              Consultez la liste de vos réunions. Visualisez les horaires et gérez votre assistance.
             </Paragraph>
             <Button
               type="primary"
@@ -44,39 +43,13 @@ function Home() {
         <Col xs={24} md={12}>
           <Card hoverable title="Fonctionnalités" style={{ height: '100%' }}>
             <ul style={{ fontSize: '16px', lineHeight: '2' }}>
-              <li>📅 Gestion des réunions</li>
+              <li>📅 Affichage des réunions</li>
               <li>🔍 Recherche et filtrage</li>
-              <li>⚡ Interface moderne et réactive</li>
-              <li>🔐 Sécurisé et fiable</li>
+              <li>⚡ Comptage</li>
             </ul>
           </Card>
         </Col>
       </Row>
-
-      <Card style={{ marginTop: '32px', background: '#f0f2f5' }}>
-        <Title level={3}>Technologies utilisées</Title>
-        <Row gutter={[16, 16]}>
-          <Col span={12}>
-            <strong>Frontend:</strong>
-            <ul>
-              <li>React 18 + TypeScript</li>
-              <li>Vite</li>
-              <li>Ant Design</li>
-              <li>React Router v6</li>
-              <li>Jotai + TanStack Query</li>
-            </ul>
-          </Col>
-          <Col span={12}>
-            <strong>Backend:</strong>
-            <ul>
-              <li>Spring Boot 3.x</li>
-              <li>Spring Data JPA</li>
-              <li>Base de données H2</li>
-              <li>Maven</li>
-            </ul>
-          </Col>
-        </Row>
-      </Card>
     </div>
   );
 }

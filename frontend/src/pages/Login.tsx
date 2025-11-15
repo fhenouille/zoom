@@ -71,12 +71,6 @@ function Login() {
             </Button>
           </Form.Item>
         </Form>
-
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <Text type="secondary" style={{ fontSize: '12px' }}>
-            Par défaut : admin / z00Mons
-          </Text>
-        </div>
       </Card>
     </div>
   );
