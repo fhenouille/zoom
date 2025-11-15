@@ -4,6 +4,7 @@ import { defineConfig } from 'vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/zoom/',
   plugins: [react()],
   resolve: {
     alias: {
