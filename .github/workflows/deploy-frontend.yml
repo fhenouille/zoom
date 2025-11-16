@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'frontend/**'
-      - '.github/workflows/deploy-frontend.yml'
+      - '.env.production'
 
 permissions:
   contents: write
@@ -28,12 +28,26 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
+      - name: Debug - Check environment files
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Files in root:"
+          ls -la | grep -E '\.env'
+          echo "Files in frontend:"
+          ls -la frontend/ | grep -E '\.env'
+
       - name: Copy .env.production for build
-        working-directory: ./frontend
         run: |
           if [ -f .env.production ]; then
-            cp .env.production .env
-            cat .env
+            echo "Found .env.production in root"
+            cp .env.production frontend/.env
+            echo "Copied to frontend/.env"
+            echo "Content:"
+            cat frontend/.env
+          else
+            echo "ERROR: .env.production not found!"
+            exit 1
           fi
 
       - name: Build frontend
