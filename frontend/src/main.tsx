@@ -6,7 +6,14 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
+import { setupGlobalErrorHandling } from './utils/errorHandler';
 import './index.css';
+
+// Initialize error handling
+setupGlobalErrorHandling();
+console.log('🚀 Zoom Meetings App Starting...');
+console.log('📍 Base URL:', globalThis.location?.href);
+console.log('📍 API Base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api');
 
 const queryClient = new QueryClient({
   defaultOptions: {

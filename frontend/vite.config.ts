@@ -3,8 +3,8 @@ import path from 'path';
 import { defineConfig } from 'vite';
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/zoom/' : '/',
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/zoom/' : '/',
   plugins: [react()],
   resolve: {
     alias: {
