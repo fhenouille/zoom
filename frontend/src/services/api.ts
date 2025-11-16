@@ -1,7 +1,13 @@
 import axios from 'axios';
 
-const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) || 'http://localhost:8080/api';
+// Get API URL from Vite define or fallback
+declare const __API_BASE_URL__: string;
+const API_BASE_URL = typeof __API_BASE_URL__ !== 'undefined' 
+  ? __API_BASE_URL__ 
+  : (import.meta.env.VITE_API_BASE_URL as string | undefined) 
+  || 'http://localhost:8080/api';
+
+console.log('🔌 API Client initialized with:', API_BASE_URL);
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
