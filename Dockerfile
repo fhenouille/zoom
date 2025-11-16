@@ -9,11 +9,10 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
 
 EXPOSE 8080
 
 ENV SPRING_PROFILES_ACTIVE=railway
 
-ENTRYPOINT ["/app/start.sh"]
+# Convert DATABASE_URL and start app
+CMD ["sh", "-c", "if [ -n \"$DATABASE_URL\" ]; then export JDBC_DATABASE_URL=$(echo $DATABASE_URL | sed 's|^postgres://|jdbc:postgresql://|'); echo '✅ Converted DATABASE_URL to JDBC'; fi && java -Dserver.port=${PORT:-8080} -jar app.jar"]
