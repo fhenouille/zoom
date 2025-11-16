@@ -6,8 +6,8 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
-import { setupGlobalErrorHandling } from './utils/errorHandler';
 import './index.css';
+import { setupGlobalErrorHandling } from './utils/errorHandler';
 
 // Initialize error handling
 setupGlobalErrorHandling();
