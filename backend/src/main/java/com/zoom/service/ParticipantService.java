@@ -55,12 +55,11 @@ public class ParticipantService {
         Integer inPersonTotal = assistanceOpt.map(MeetingAssistance::getInPersonTotal).orElse(0);
 
         List<ParticipantWithAssistance> result = new ArrayList<>();
-        for (int i = 0; i < participants.size(); i++) {
-            Participant p = participants.get(i);
+        for (Participant p : participants) {
+            // Récupérer la valeur d'assistance par participantId (pas par position)
             Integer assistanceValue = null;
-
-            if (assistanceOpt.isPresent() && i < assistanceOpt.get().getValues().size()) {
-                assistanceValue = assistanceOpt.get().getValues().get(i);
+            if (assistanceOpt.isPresent()) {
+                assistanceValue = assistanceOpt.get().getValues().get(p.getId());
             }
 
             result.add(new ParticipantWithAssistance(
@@ -157,6 +156,8 @@ public class ParticipantService {
 
     /**
      * Force la re-synchronisation des participants depuis Zoom
+     * Supprime uniquement les valeurs d'assistance individuelles
+     * en conservant le total présentiel
      */
     @Transactional
     public ParticipantsResponse refreshParticipants(Long meetingId) {
@@ -171,6 +172,13 @@ public class ParticipantService {
             participantRepository.flush(); // Force l'exécution du DELETE avant de continuer
             log.info("🗑️ Participants existants supprimés");
         }
+
+        // Supprime les valeurs d'assistance individuelles (pas le total présentiel!)
+        meetingAssistanceRepository.findByMeetingId(meetingId).ifPresent(assistance -> {
+            assistance.getValues().clear(); // Vide la map des valeurs
+            meetingAssistanceRepository.save(assistance);
+            log.info("🗑️ Valeurs d'assistance individuelles supprimées (total présentiel conservé)");
+        });
 
         // Re-synchronise
         syncParticipantsFromZoom(meeting);

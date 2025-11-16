@@ -1,7 +1,7 @@
 package com.zoom.entity;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import jakarta.persistence.*;
 
@@ -23,24 +23,25 @@ public class MeetingAssistance {
     @Column(name = "in_person_total", nullable = false)
     private Integer inPersonTotal;
 
+    // Stocke la valeur d'assistance pour chaque participant par leur ID
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
         name = "assistance_values",
         joinColumns = @JoinColumn(name = "meeting_assistance_id")
     )
+    @MapKeyColumn(name = "participant_id")
     @Column(name = "assistance_value")
-    @OrderColumn(name = "position")
-    private List<Integer> values = new ArrayList<>();
+    private Map<Long, Integer> values = new HashMap<>();
 
     // Constructeurs
     public MeetingAssistance() {
     }
 
-    public MeetingAssistance(Meeting meeting, Integer total, Integer inPersonTotal, List<Integer> values) {
+    public MeetingAssistance(Meeting meeting, Integer total, Integer inPersonTotal, Map<Long, Integer> values) {
         this.meeting = meeting;
         this.total = total;
         this.inPersonTotal = inPersonTotal;
-        this.values = values != null ? new ArrayList<>(values) : new ArrayList<>();
+        this.values = values != null ? new HashMap<>(values) : new HashMap<>();
     }
 
     // Getters et Setters
@@ -76,11 +77,11 @@ public class MeetingAssistance {
         this.inPersonTotal = inPersonTotal;
     }
 
-    public List<Integer> getValues() {
+    public Map<Long, Integer> getValues() {
         return values;
     }
 
-    public void setValues(List<Integer> values) {
-        this.values = values != null ? new ArrayList<>(values) : new ArrayList<>();
+    public void setValues(Map<Long, Integer> values) {
+        this.values = values != null ? new HashMap<>(values) : new HashMap<>();
     }
 }

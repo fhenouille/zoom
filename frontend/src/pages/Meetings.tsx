@@ -93,7 +93,11 @@ function Meetings() {
   const handleSaveAssistance = async () => {
     if (selectedMeeting) {
       const total = calculateTotalAssistance();
-      const values = participants.map((p) => assistanceValues.get(p.id) ?? 1);
+      // Créer un objet avec participantId => valeur au lieu d'un array
+      const values: Record<number, number> = {};
+      participants.forEach((p) => {
+        values[p.id] = assistanceValues.get(p.id) ?? 1;
+      });
 
       try {
         await participantService.saveAssistance(selectedMeeting.id, total, inPersonValue, values);

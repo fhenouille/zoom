@@ -25,12 +25,13 @@ export const participantService = {
 
   /**
    * Sauvegarde les valeurs d'assistance pour un meeting
+   * Les valeurs sont organisées par participantId
    */
   async saveAssistance(
     meetingId: number,
     total: number,
     inPersonTotal: number,
-    values: number[]
+    values: Record<number, number>
   ): Promise<void> {
     await apiClient.post(`/meetings/${meetingId}/assistance`, { total, inPersonTotal, values });
   },

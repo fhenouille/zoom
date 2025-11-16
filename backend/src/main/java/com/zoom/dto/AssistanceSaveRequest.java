@@ -1,20 +1,21 @@
 package com.zoom.dto;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * DTO pour recevoir les données d'assistance à sauvegarder
+ * Les valeurs sont organisées par participantId (Long -> Integer)
  */
 public class AssistanceSaveRequest {
     private Integer total;
     private Integer inPersonTotal;
-    private List<Integer> values;
+    private Map<Long, Integer> values;
 
     // Constructeurs
     public AssistanceSaveRequest() {
     }
 
-    public AssistanceSaveRequest(Integer total, Integer inPersonTotal, List<Integer> values) {
+    public AssistanceSaveRequest(Integer total, Integer inPersonTotal, Map<Long, Integer> values) {
         this.total = total;
         this.inPersonTotal = inPersonTotal;
         this.values = values;
@@ -37,11 +38,11 @@ public class AssistanceSaveRequest {
         this.inPersonTotal = inPersonTotal;
     }
 
-    public List<Integer> getValues() {
+    public Map<Long, Integer> getValues() {
         return values;
     }
 
-    public void setValues(List<Integer> values) {
+    public void setValues(Map<Long, Integer> values) {
         this.values = values;
     }
 }
