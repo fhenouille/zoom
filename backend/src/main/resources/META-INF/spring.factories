@@ -1,0 +1,2 @@
+spring.factories
+org.springframework.boot.env.EnvironmentPostProcessor=com.zoom.config.DatabaseUrlEnvironmentPostProcessor
