@@ -8,6 +8,9 @@ on:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -34,4 +37,3 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend/dist
-          cname: zoom.fhenouille.com  # Optionnel : domaine personnalisé
