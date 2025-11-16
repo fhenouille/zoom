@@ -10,9 +10,8 @@ function Header() {
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
 
-  // Simplified: Use environment variables from .env
-  const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
-  console.log('✨ Header - Final API URL:', apiUrl);
+  // Production URL hardcoded for GitHub Pages + Railway
+  console.log('🔧 Header - Production Mode:', !import.meta.env.DEV);
 
   const menuItems = [
     {
