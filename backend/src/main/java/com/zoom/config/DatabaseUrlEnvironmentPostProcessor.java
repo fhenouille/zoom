@@ -29,24 +29,23 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             System.out.println("✅ DATABASE_URL is SET");
             System.out.println("   Original format: " + maskSensitiveData(databaseUrl));
 
-            // Check if it's already in JDBC format
-            if (databaseUrl.startsWith("jdbc:postgresql://")) {
-                System.out.println("✅ Already in JDBC format");
-            } else if (databaseUrl.startsWith("postgres://")) {
-                System.out.println("📝 Raw postgres:// format detected");
-                System.out.println("   Dockerfile will convert to jdbc:postgresql://");
-
-                // Convert and set as new property
-                String jdbcUrl = convertPostgresToJdbc(databaseUrl);
+            // Convert to JDBC format if needed and set directly in Spring properties
+            String jdbcUrl = convertToJdbc(databaseUrl);
+            if (!databaseUrl.equals(jdbcUrl)) {
+                System.out.println("📝 Converting to JDBC format");
                 System.out.println("   After conversion: " + maskSensitiveData(jdbcUrl));
-
-                // Add to Spring properties
-                Map<String, Object> properties = new HashMap<>();
-                properties.put("JDBC_DATABASE_URL", jdbcUrl);
-                environment.getPropertySources().addFirst(
-                    new MapPropertySource("converted-database-url", properties)
-                );
+            } else {
+                System.out.println("✅ Already in JDBC format");
             }
+
+            // Set the JDBC URL in Spring's datasource configuration
+            // This will be the first source, overriding any other configuration
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("spring.datasource.url", jdbcUrl);
+            environment.getPropertySources().addFirst(
+                new MapPropertySource("railway-database-url", properties)
+            );
+            System.out.println("✅ spring.datasource.url configured with converted URL");
         }
 
         // Log active profiles
@@ -69,13 +68,19 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
     }
 
     /**
-     * Convertit le format postgres:// en jdbc:postgresql://
+     * Convertit les formats postgres:// et postgresql:// en jdbc:postgresql://
      */
-    private String convertPostgresToJdbc(String postgresUrl) {
-        if (postgresUrl == null) {
+    private String convertToJdbc(String databaseUrl) {
+        if (databaseUrl == null) {
             return null;
         }
-        return postgresUrl.replaceFirst("^postgres://", "jdbc:postgresql://");
+        // Handle both postgres:// and postgresql:// prefixes
+        if (databaseUrl.startsWith("postgres://")) {
+            return databaseUrl.replaceFirst("^postgres://", "jdbc:postgresql://");
+        } else if (databaseUrl.startsWith("postgresql://")) {
+            return databaseUrl.replaceFirst("^postgresql://", "jdbc:postgresql://");
+        }
+        return databaseUrl;
     }
 
     /**
