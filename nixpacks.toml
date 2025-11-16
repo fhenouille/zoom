@@ -1,9 +1,0 @@
-[build]
-# Install Maven and Java 17
-pkgManager = "maven"
-
-[phases.build]
-cmds = ["cd backend && mvn clean package -DskipTests -DskipTests"]
-
-[phases.start]
-cmd = "java -Dserver.port=$PORT -Dspring.profiles.active=railway -jar backend/target/zoom-backend-0.0.1-SNAPSHOT.jar"
