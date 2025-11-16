@@ -12,8 +12,8 @@ function App() {
 
   useEffect(() => {
     console.log('📍 Current Route:', location.pathname);
-    console.log('🚀 API Base URL:', apiBaseUrl);
-    console.log('✅ Production build with Railway backend');
+    console.log('🚀 API Base URL configured:', apiBaseUrl);
+    console.log('✅ Latest production build');
   }, [location.pathname, apiBaseUrl]);
 
   return (

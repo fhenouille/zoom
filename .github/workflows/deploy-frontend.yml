@@ -24,31 +24,25 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: npm install
-
-      - name: Create .env for production build
+      - name: Create .env BEFORE install
         working-directory: ./frontend
         run: |
           echo "Creating .env file for production build..."
-          cat > .env << 'EOF'
-          VITE_API_BASE_URL=https://zoom-production-1b9e.up.railway.app/api
-          VITE_APP_NAME=Zoom Meetings
-          EOF
-          echo "Content of .env:"
+          echo "VITE_API_BASE_URL=https://zoom-production-1b9e.up.railway.app/api" > .env
+          echo "VITE_APP_NAME=Zoom Meetings" >> .env
+          echo "✅ Created .env with content:"
           cat .env
-          echo "---"
-          if [ -f .env.production ]; then
-            echo "Also found .env.production:"
-            cat .env.production
-          fi
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm install
 
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
         env:
           NODE_ENV: production
+          VITE_API_BASE_URL: https://zoom-production-1b9e.up.railway.app/api
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
