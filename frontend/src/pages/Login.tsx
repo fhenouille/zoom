@@ -10,7 +10,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
-  
+
   // Production build with Railway backend configured
   console.log('🔐 Login page loaded - API configured from .env.production');
 

@@ -7,7 +7,7 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ command, mode }) => {
   // Load env vars based on mode
   const env = loadEnv(mode, process.cwd(), '');
-  
+
   return {
     base: command === 'build' ? '/zoom/' : '/',
     define: {
