@@ -10,12 +10,9 @@ function Header() {
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
 
-  // v3: Vite define() for environment variables
-  const apiUrl =
-    typeof __API_BASE_URL__ !== 'undefined'
-      ? __API_BASE_URL__
-      : import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
-  console.log('🎯 Header - API from Vite define:', apiUrl);
+  // Simplified: Use environment variables from .env
+  const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+  console.log('✨ Header - Final API URL:', apiUrl);
 
   const menuItems = [
     {
