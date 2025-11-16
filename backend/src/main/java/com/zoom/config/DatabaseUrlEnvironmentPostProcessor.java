@@ -90,21 +90,35 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
     /**
      * Convertit les formats postgres:// et postgresql:// en jdbc:postgresql://
      * Railway provides: postgresql://user:pass@postgres.railway.internal:5432/railway
+     * IMPORTANT: Removes credentials from URL and returns clean URL without user:pass
      */
     private String convertToJdbc(String databaseUrl) {
         if (databaseUrl == null) {
             return null;
         }
 
-        // Simply replace the protocol prefix - the rest of URL stays the same
+        String urlWithoutProtocol;
+
+        // Remove protocol prefix
         if (databaseUrl.startsWith(POSTGRES_URL_PREFIX)) {
-            return "jdbc:postgresql://" + databaseUrl.substring(POSTGRES_URL_PREFIX.length());
+            urlWithoutProtocol = databaseUrl.substring(POSTGRES_URL_PREFIX.length());
         } else if (databaseUrl.startsWith(POSTGRESQL_URL_PREFIX)) {
-            return "jdbc:postgresql://" + databaseUrl.substring(POSTGRESQL_URL_PREFIX.length());
+            urlWithoutProtocol = databaseUrl.substring(POSTGRESQL_URL_PREFIX.length());
+        } else {
+            // Already in JDBC format or unknown format
+            return databaseUrl;
         }
 
-        // Already in JDBC format or unknown format
-        return databaseUrl;
+        // Remove credentials (user:password@) from URL
+        int atIndex = urlWithoutProtocol.indexOf('@');
+        if (atIndex > 0) {
+            // Keep only host:port/database part, removing user:password@
+            String hostAndDatabase = urlWithoutProtocol.substring(atIndex + 1);
+            return "jdbc:postgresql://" + hostAndDatabase;
+        } else {
+            // No credentials in URL, just convert protocol
+            return "jdbc:postgresql://" + urlWithoutProtocol;
+        }
     }
 
     /**
