@@ -3,6 +3,7 @@ import path from 'path';
 import { defineConfig } from 'vite';
 
 // https://vitejs.dev/config/
+// Production build uses API endpoint from .env.production (Railway backend)
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/zoom/' : '/',
   plugins: [react()],
