@@ -48,6 +48,14 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- PostgreSQL Driver for Heroku -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Lombok (optionnel mais recommandé) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
