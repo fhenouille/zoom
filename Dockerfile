@@ -9,10 +9,11 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 EXPOSE 8080
 
 ENV SPRING_PROFILES_ACTIVE=railway
 
-# Convert DATABASE_URL from postgres:// to jdbc:postgresql://
-CMD ["sh", "-c", "if [ -z \"$DATABASE_URL\" ]; then SPRING_DATASOURCE_URL=\"jdbc:postgresql://localhost:5432/zoomdb\"; else SPRING_DATASOURCE_URL=$(echo $DATABASE_URL | sed 's/^postgres:/jdbc:postgresql:/'); fi && java -Dserver.port=${PORT:-8080} -Dspring.datasource.url=$SPRING_DATASOURCE_URL -jar app.jar"]
+ENTRYPOINT ["/app/start.sh"]
