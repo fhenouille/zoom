@@ -80,6 +80,9 @@ yarn-error.log*
 .env.local
 .env.*.local
 *.env
+# But allow production environment config
+!.env.production
+!frontend/.env.production
 
 # Build outputs
 dist/
