@@ -13,4 +13,6 @@ COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 
 ENV SPRING_PROFILES_ACTIVE=railway
-CMD ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
+
+# Convert DATABASE_URL from postgres:// to jdbc:postgresql://
+CMD ["sh", "-c", "if [ -z \"$DATABASE_URL\" ]; then SPRING_DATASOURCE_URL=\"jdbc:postgresql://localhost:5432/zoomdb\"; else SPRING_DATASOURCE_URL=$(echo $DATABASE_URL | sed 's/^postgres:/jdbc:postgresql:/'); fi && java -Dserver.port=${PORT:-8080} -Dspring.datasource.url=$SPRING_DATASOURCE_URL -jar app.jar"]
