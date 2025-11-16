@@ -22,10 +22,10 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${zoom.user-id}")
+    @Value("${zoom.api.user-id:default-user-id}")
     private String zoomUserId;
 
-    @Value("${zoom.account-id}")
+    @Value("${zoom.api.account-id:default-account-id}")
     private String zoomAccountId;
 
     @Override
