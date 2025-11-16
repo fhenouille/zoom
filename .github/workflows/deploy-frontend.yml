@@ -28,6 +28,14 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
+      - name: Copy .env.production for build
+        working-directory: ./frontend
+        run: |
+          if [ -f .env.production ]; then
+            cp .env.production .env
+            cat .env
+          fi
+
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
