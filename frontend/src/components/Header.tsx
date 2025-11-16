@@ -10,9 +10,9 @@ function Header() {
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
   
-  // Force rebuild - Railway backend configured
+  // Force rebuild v2 - Railway backend from .env
   const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
-  console.log('Header mounted - API:', apiUrl);
+  console.log('✨ Header loaded - API configured:', apiUrl);
 
   const menuItems = [
     {

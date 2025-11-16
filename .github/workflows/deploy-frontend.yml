@@ -28,26 +28,20 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
-      - name: Debug - Check environment files
+      - name: Create .env for production build
+        working-directory: ./frontend
         run: |
-          echo "Current directory:"
-          pwd
-          echo "Files in root:"
-          ls -la | grep -E '\.env' || echo "No .env files in root"
-          echo "Files in frontend:"
-          ls -la frontend/ | grep -E '\.env'
-
-      - name: Copy .env.production for build
-        run: |
-          if [ -f frontend/.env.production ]; then
-            echo "Found .env.production in frontend/"
-            cp frontend/.env.production frontend/.env
-            echo "Copied to frontend/.env"
-            echo "Content:"
-            cat frontend/.env
-          else
-            echo "ERROR: frontend/.env.production not found!"
-            exit 1
+          echo "Creating .env file for production build..."
+          cat > .env << 'EOF'
+          VITE_API_BASE_URL=https://zoom-production-1b9e.up.railway.app/api
+          VITE_APP_NAME=Zoom Meetings
+          EOF
+          echo "Content of .env:"
+          cat .env
+          echo "---"
+          if [ -f .env.production ]; then
+            echo "Also found .env.production:"
+            cat .env.production
           fi
 
       - name: Build frontend
