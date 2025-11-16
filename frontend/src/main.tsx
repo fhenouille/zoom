@@ -15,6 +15,15 @@ console.log('🚀 Zoom Meetings App Starting...');
 console.log('📍 Base URL:', globalThis.location?.href);
 console.log('📍 API Base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api');
 
+// Determine the basename for React Router based on the environment
+const getBasename = () => {
+  const isDev = !import.meta.env.PROD;
+  return isDev ? '/' : '/zoom/';
+};
+
+const basename = getBasename();
+console.log('📍 Router Basename:', basename);
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -29,7 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <ConfigProvider locale={frFR}>
-        <BrowserRouter>
+        <BrowserRouter basename={basename}>
           <AuthProvider>
             <App />
           </AuthProvider>

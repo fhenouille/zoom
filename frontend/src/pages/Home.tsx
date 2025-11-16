@@ -1,11 +1,16 @@
 import { CalendarOutlined, RocketOutlined } from '@ant-design/icons';
 import { Button, Card, Col, Row, Typography } from 'antd';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const { Title, Paragraph } = Typography;
 
 function Home() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log('✅ Home component rendered');
+  }, []);
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
