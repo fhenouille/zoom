@@ -143,7 +143,9 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             int atIndex = urlWithoutProtocol.indexOf('@');
             if (atIndex > 0) {
                 String userPassword = urlWithoutProtocol.substring(0, atIndex);
-                int colonIndex = userPassword.indexOf(':');
+                // Find the LAST colon to split username and password
+                // This is important because passwords might contain colons
+                int colonIndex = userPassword.lastIndexOf(':');
 
                 if (colonIndex > 0) {
                     result[0] = userPassword.substring(0, colonIndex); // username
