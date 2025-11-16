@@ -1,11 +1,14 @@
 import axios from 'axios';
 
 // Production: Use Railway backend, Development: Use localhost
-const API_BASE_URL = import.meta.env.DEV 
-  ? 'http://localhost:8080/api'
-  : 'https://zoom-production-1b9e.up.railway.app/api';
+// In production, __API_BASE_URL__ is injected by Vite define()
+// In development, we use localhost
+declare const __API_BASE_URL__: string;
+const API_BASE_URL = typeof __API_BASE_URL__ !== 'undefined' 
+  ? __API_BASE_URL__
+  : 'http://localhost:8080/api';
 
-console.log('🔌 API Client - Mode:', import.meta.env.DEV ? 'DEV' : 'PROD', '- URL:', API_BASE_URL);
+console.log('🔌 API Client - URL:', API_BASE_URL);
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
