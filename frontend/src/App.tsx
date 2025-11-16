@@ -8,11 +8,13 @@ import Meetings from './pages/Meetings';
 
 function App() {
   const location = useLocation();
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
   useEffect(() => {
     console.log('📍 Current Route:', location.pathname);
-    console.log('🚀 API Base URL configured via Railway backend');
-  }, [location.pathname]);
+    console.log('🚀 API Base URL:', apiBaseUrl);
+    console.log('✅ Production build with Railway backend');
+  }, [location.pathname, apiBaseUrl]);
 
   return (
     <Routes>
