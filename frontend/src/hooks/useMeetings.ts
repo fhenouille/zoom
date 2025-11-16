@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 export const useMeetings = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['meetings'],
-    queryFn: meetingService.getAllMeetings,
+    queryFn: () => meetingService.getAllMeetings(),
   });
 
   return {

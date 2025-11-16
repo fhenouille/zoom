@@ -34,16 +34,16 @@ function Header() {
       icon: <UserOutlined />,
       label: user?.username || 'Utilisateur',
       disabled: true,
-    },
+    } as const,
     {
-      type: 'divider',
+      type: 'divider' as const,
     },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: 'Déconnexion',
       onClick: handleLogout,
-    },
+    } as const,
   ];
 
   return (

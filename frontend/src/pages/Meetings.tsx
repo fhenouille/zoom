@@ -142,7 +142,7 @@ function Meetings() {
       // Initialiser les valeurs d'assistance selon les règles
       const initialAssistance = new Map<number, number>();
 
-      response.participants.forEach((p, index) => {
+      response.participants.forEach((p) => {
         // Utiliser la valeur sauvegardée si elle existe dans assistanceValue du backend
         if (p.assistanceValue !== null && p.assistanceValue !== undefined) {
           initialAssistance.set(p.id, p.assistanceValue);
@@ -195,7 +195,7 @@ function Meetings() {
       // Réinitialiser les valeurs d'assistance selon les règles
       const initialAssistance = new Map<number, number>();
 
-      response.participants.forEach((p, index) => {
+      response.participants.forEach((p) => {
         // Utiliser la valeur sauvegardée si elle existe dans assistanceValue du backend
         if (p.assistanceValue !== null && p.assistanceValue !== undefined) {
           initialAssistance.set(p.id, p.assistanceValue);
