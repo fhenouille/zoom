@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'frontend/**'
-      - '.env.production'
+      - '.github/workflows/deploy-frontend.yml'
 
 permissions:
   contents: write
@@ -33,20 +33,20 @@ jobs:
           echo "Current directory:"
           pwd
           echo "Files in root:"
-          ls -la | grep -E '\.env'
+          ls -la | grep -E '\.env' || echo "No .env files in root"
           echo "Files in frontend:"
           ls -la frontend/ | grep -E '\.env'
 
       - name: Copy .env.production for build
         run: |
-          if [ -f .env.production ]; then
-            echo "Found .env.production in root"
-            cp .env.production frontend/.env
+          if [ -f frontend/.env.production ]; then
+            echo "Found .env.production in frontend/"
+            cp frontend/.env.production frontend/.env
             echo "Copied to frontend/.env"
             echo "Content:"
             cat frontend/.env
           else
-            echo "ERROR: .env.production not found!"
+            echo "ERROR: frontend/.env.production not found!"
             exit 1
           fi
 
