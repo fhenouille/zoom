@@ -77,11 +77,11 @@ heroku apps:destroy zoom-backend-fhenouille
 ## Troubleshooting
 
 ### Les données ne persistent pas
-C'est normal avec Heroku - la base de données est réinitialisée à chaque déploiement. 
+C'est normal avec Heroku - la base de données est réinitialisée à chaque déploiement.
 Pour persister les données, utilisez une base de données PostgreSQL externe.
 
 ### Port dynamique
-Heroku assigne le port dynamiquement via la variable `$PORT`. 
+Heroku assigne le port dynamiquement via la variable `$PORT`.
 C'est géré dans `application-heroku.properties` avec `server.port=${PORT:8080}`
 
 ### CORS
