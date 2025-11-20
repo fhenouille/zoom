@@ -1,0 +1,3 @@
+-- Baseline migration for Flyway versioning
+-- This is a placeholder to indicate the database is initialized
+-- All actual schema creation happens in V1
