@@ -8,6 +8,5 @@ import lombok.*;
 public class AuthResponse {
     private String token;
     private String username;
-    private String zoomUserId;
-    private String zoomAccountId;
+    private String role;
 }

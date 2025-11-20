@@ -22,11 +22,8 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${zoom.api.user-id:default-user-id}")
-    private String zoomUserId;
-
-    @Value("${zoom.api.account-id:default-account-id}")
-    private String zoomAccountId;
+    @Value("${app.admin.password:admin123}")
+    private String adminPassword;
 
     @Override
     public void run(String... args) {
@@ -34,9 +31,8 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.count() == 0) {
             User adminUser = new User();
             adminUser.setUsername("admin");
-            adminUser.setPassword(passwordEncoder.encode("z00Mons"));
-            adminUser.setZoomUserId(zoomUserId);
-            adminUser.setZoomAccountId(zoomAccountId);
+            adminUser.setPassword(passwordEncoder.encode(adminPassword));
+            adminUser.setRole("ADMIN");
 
             userRepository.save(adminUser);
         }

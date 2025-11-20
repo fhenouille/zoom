@@ -1,7 +1,5 @@
 package com.zoom.service;
 
-import java.time.LocalDateTime;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,17 +32,13 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         log.info("Tentative de connexion pour l'utilisateur: {}", request.getUsername());
 
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findById(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             log.warn("Mot de passe incorrect pour l'utilisateur: {}", request.getUsername());
             throw new RuntimeException("Mot de passe incorrect");
         }
-
-        // Met à jour la date de dernière connexion
-        user.setLastLogin(LocalDateTime.now());
-        userRepository.save(user);
 
         // Génère le token JWT
         String token = jwtTokenProvider.generateToken(user.getUsername());
@@ -54,15 +48,13 @@ public class AuthService {
         return new AuthResponse(
                 token,
                 user.getUsername(),
-                user.getZoomUserId(),
-                user.getZoomAccountId()
-        );
+                user.getRole());
     }
 
     /**
      * Crée un nouvel utilisateur (pour l'administration)
      */
-    public User createUser(String username, String password, String zoomUserId, String zoomAccountId) {
+    public User createUser(String username, String password, String role) {
         if (userRepository.existsByUsername(username)) {
             throw new RuntimeException("L'utilisateur existe déjà");
         }
@@ -70,8 +62,7 @@ public class AuthService {
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setZoomUserId(zoomUserId);
-        user.setZoomAccountId(zoomAccountId);
+        user.setRole(role);
 
         return userRepository.save(user);
     }

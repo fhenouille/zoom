@@ -1,5 +1,5 @@
-import { authService, type AuthResponse } from '@/services/authService';
 import { setAuthToken } from '@/services/api';
+import { authService, type AuthResponse } from '@/services/authService';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 interface AuthContextType {
@@ -55,7 +55,5 @@ export const useAuth = () => {
   if (context === undefined) {
     throw new Error('useAuth doit être utilisé dans un AuthProvider');
   }
-  return context;
-};
   return context;
 };
