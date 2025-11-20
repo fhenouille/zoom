@@ -54,8 +54,7 @@ function Meetings() {
 
   // Fonction pour calculer la valeur initiale d'assistance selon les règles de priorité
   const calculateInitialAssistance = (name: string, pollAnswer?: string): number => {
-    // Règle 1 : 0 si nom = Mons Assemblee ou nom = tablette pupitre
-    if (name === 'Mons Assemblee' || name === 'tablette pupitre') {
+    if (name === 'Mons Assemblee' || name === 'tablette pupitre' || name.toLowerCase().includes('accueil')) {
       return 0;
     }
 
