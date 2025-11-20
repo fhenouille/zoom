@@ -36,13 +36,11 @@ public class DataPurgeService {
     public DataPurgeService(MeetingRepository meetingRepository,
                            MeetingAssistanceRepository meetingAssistanceRepository,
                            ParticipantRepository participantRepository,
-                           MeetingArchiveRepository meetingArchiveRepository,
-                           DataPurgeService self) {
+                           MeetingArchiveRepository meetingArchiveRepository) {
         this.meetingRepository = meetingRepository;
         this.meetingAssistanceRepository = meetingAssistanceRepository;
         this.participantRepository = participantRepository;
         this.meetingArchiveRepository = meetingArchiveRepository;
-        this.self = self;
     }
 
     /**
