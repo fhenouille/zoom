@@ -1,14 +1,14 @@
 -- Initial schema creation for zoom database
 -- This migration creates all the base tables
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS meetings (
+CREATE TABLE meetings (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     zoom_id VARCHAR(255) NOT NULL UNIQUE,
     zoom_uuid VARCHAR(255),
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS meetings (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS participants (
+CREATE TABLE participants (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     meeting_id BIGINT NOT NULL,
     user_id VARCHAR(255),
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS participants (
     UNIQUE(meeting_id, user_id)
 );
 
-CREATE TABLE IF NOT EXISTS meeting_assistance (
+CREATE TABLE meeting_assistance (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     meeting_id BIGINT NOT NULL UNIQUE,
     total INTEGER NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS meeting_assistance (
     CONSTRAINT fk_meeting_assistance_meeting FOREIGN KEY (meeting_id) REFERENCES meetings(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS assistance_values (
+CREATE TABLE assistance_values (
     meeting_assistance_id BIGINT NOT NULL,
     participant_id BIGINT NOT NULL,
     assistance_value INTEGER NOT NULL,

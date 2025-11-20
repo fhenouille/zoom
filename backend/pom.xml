@@ -56,12 +56,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Flyway for Database Migrations (includes PostgreSQL support) -->
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-        </dependency>
-
         <!-- Lombok (optionnel mais recommandé) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
