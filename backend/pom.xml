@@ -48,12 +48,18 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- PostgreSQL Driver for Heroku -->
+        <!-- PostgreSQL Driver for Railway -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.0</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- Flyway for Database Migrations (includes PostgreSQL support) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
         </dependency>
 
         <!-- Lombok (optionnel mais recommandé) -->
