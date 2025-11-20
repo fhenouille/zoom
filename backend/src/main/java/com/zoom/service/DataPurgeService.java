@@ -28,7 +28,7 @@ public class DataPurgeService {
     private final MeetingAssistanceRepository meetingAssistanceRepository;
     private final ParticipantRepository participantRepository;
     private final MeetingArchiveRepository meetingArchiveRepository;
-    
+
     // Nombre de jours avant purge (par défaut 90)
     @Value("${app.data.retention.days:90}")
     private int retentionDays;

@@ -1,7 +1,6 @@
 package com.zoom.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -77,7 +76,7 @@ public class DataPurgeServiceTest {
         // Assert
         verify(meetingAssistanceRepository, times(1)).deleteByMeetingId(1L);
         verify(participantRepository, times(1)).deleteByMeetingId(1L);
-        verify(meetingRepository, times(1)).save(testMeeting);
+        verify(meetingRepository, times(1)).delete(testMeeting);
         verify(meetingArchiveRepository, times(1)).save(any(MeetingArchive.class));
     }
 
@@ -148,7 +147,7 @@ public class DataPurgeServiceTest {
     }
 
     @Test
-    public void testPurgeMarksReunionAsPurged() {
+    public void testPurgeDeletesMeetingCompletely() {
         // Arrange
         when(meetingAssistanceRepository.findByMeetingId(1L)).thenReturn(Optional.of(testAssistance));
 
@@ -156,8 +155,10 @@ public class DataPurgeServiceTest {
         dataPurgeService.archiveAndPurgeMeeting(testMeeting);
 
         // Assert
-        assertNotNull(testMeeting.getPurgeDate());
-        verify(meetingRepository, times(1)).save(testMeeting);
+        // Le meeting doit être complètement supprimé après archivage des stats
+        verify(meetingAssistanceRepository, times(1)).deleteByMeetingId(1L);
+        verify(participantRepository, times(1)).deleteByMeetingId(1L);
+        verify(meetingRepository, times(1)).delete(testMeeting);
     }
 
     @Test
