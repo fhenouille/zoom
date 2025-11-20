@@ -4,9 +4,8 @@ import axios from 'axios';
 // In production, __API_BASE_URL__ is injected by Vite define()
 // In development, we use localhost
 declare const __API_BASE_URL__: string;
-const API_BASE_URL = typeof __API_BASE_URL__ !== 'undefined' 
-  ? __API_BASE_URL__
-  : 'http://localhost:8080/api';
+const API_BASE_URL =
+  typeof __API_BASE_URL__ !== 'undefined' ? __API_BASE_URL__ : 'http://localhost:8080/api';
 
 console.log('🔌 API Client - URL:', API_BASE_URL);
 
