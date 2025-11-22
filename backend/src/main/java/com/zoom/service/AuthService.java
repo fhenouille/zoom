@@ -35,11 +35,11 @@ public class AuthService {
         log.info("Tentative de connexion pour l'utilisateur: {}", request.getUsername());
 
         User user = userRepository.findById(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            log.warn("Mot de passe incorrect pour l'utilisateur: {}", request.getUsername());
-            throw new RuntimeException("Mot de passe incorrect");
+            log.warn("Authentification échouée pour: {}", request.getUsername());
+            throw new RuntimeException("Invalid credentials");
         }
 
         // Génère le token JWT

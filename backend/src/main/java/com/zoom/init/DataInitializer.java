@@ -44,7 +44,6 @@ public class DataInitializer implements CommandLineRunner {
             userRepository.save(adminUser);
 
             log.info("✅ DataInitializer - Utilisateur admin créé avec le rôle: ADMIN");
-            log.info("🔑 DataInitializer - Username: admin | Password: {} | Role: ADMIN", adminPassword);
         } else {
             log.info("ℹ️ DataInitializer - Utilisateurs existants, pas d'initialisation nécessaire");
         }
