@@ -33,16 +33,19 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers("/api/auth/**").permitAll();
+                    // H2 console only allowed if explicitly enabled via ENABLE_H2_CONSOLE env var
+                    if (isH2ConsoleEnabled()) {
+                        auth.requestMatchers("/h2-console/**").permitAll();
+                    }
+                    auth.anyRequest().authenticated();
+                })
                 .headers(headers -> headers
-                        .frameOptions(frame -> frame.disable()) // H2 console uniquement
+                        .frameOptions(frame -> frame.disable()) // H2 console only
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
-                                .maxAgeInSeconds(31536000) // 1 an
+                                .maxAgeInSeconds(31536000) // 1 year
                         )
                         .contentSecurityPolicy(csp -> csp
                                 .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'")
@@ -51,6 +54,14 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * Vérifie si la console H2 est activée via la variable d'environnement
+     */
+    private boolean isH2ConsoleEnabled() {
+        String enableH2 = System.getenv("ENABLE_H2_CONSOLE");
+        return "true".equalsIgnoreCase(enableH2);
     }
 
     @Bean
