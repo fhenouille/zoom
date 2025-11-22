@@ -10,20 +10,37 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * Endpoint de diagnostic pour vérifier la configuration de la base de données
- * Accessible à GET /api/health/database-config
+ * Accessible à GET /api/health/database-config (développement uniquement)
  *
- * ⚠️ À utiliser uniquement en développement/débogage
- * Limiter l'accès en production via des règles de sécurité
+ * ⚠️ IMPORTANT: À utiliser uniquement en développement/débogage
+ * En production: Désactiver cet endpoint ou requérir une authentification ADMIN
  */
 @RestController
 @RequestMapping("/api/health")
 public class DatabaseConfigController {
 
+    private final Environment environment;
+
     @Autowired
-    private Environment environment;
+    public DatabaseConfigController(Environment environment) {
+        this.environment = environment;
+    }
+
+    /**
+     * Vérifie si le mode développement est activé via variable d'environnement
+     */
+    private boolean isDevelopmentMode() {
+        String debugMode = environment.getProperty("DEBUG_DATABASE_CONFIG", "false");
+        return "true".equalsIgnoreCase(debugMode);
+    }
 
     @GetMapping("/database-config")
     public ResponseEntity<Map<String, Object>> getDatabaseConfig() {
+        // ⚠️ SÉCURITÉ: Cet endpoint doit être désactivé en production
+        if (!isDevelopmentMode()) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Database config endpoint disabled in production"));
+        }
         Map<String, Object> config = new HashMap<>();
 
         // Variables d'environnement

@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:zoomAppSecretKeyForJWTTokenGenerationAndValidation12345}")
+    @Value("${jwt.secret:#{T(java.util.UUID).randomUUID().toString()}}")
     private String jwtSecret;
 
     @Value("${jwt.expiration:86400000}") // 24 heures par défaut

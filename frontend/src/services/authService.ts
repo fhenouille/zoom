@@ -8,8 +8,7 @@ export interface LoginRequest {
 export interface AuthResponse {
   token: string;
   username: string;
-  zoomUserId: string;
-  zoomAccountId: string;
+  role: string;
 }
 
 export const authService = {

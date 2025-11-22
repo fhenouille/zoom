@@ -38,10 +38,17 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.disable()) // H2 console uniquement
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000) // 1 an
+                        )
+                        .contentSecurityPolicy(csp -> csp
+                                .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'")
+                        )
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        // Pour permettre l'accès à la console H2
-        http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http.build();
     }

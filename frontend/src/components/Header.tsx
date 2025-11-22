@@ -1,5 +1,11 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { CalendarOutlined, HomeOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  CalendarOutlined,
+  HomeOutlined,
+  LogoutOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import { Avatar, Dropdown, Layout, Menu, Space } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -39,8 +45,27 @@ function Header() {
       disabled: true,
     } as const,
     {
+      key: 'role',
+      label: `Rôle: ${user?.role || 'USER'}`,
+      disabled: true,
+    } as const,
+    {
       type: 'divider' as const,
     },
+    // Afficher l'option Admin uniquement si l'utilisateur a le rôle ADMIN
+    ...(user?.role === 'ADMIN'
+      ? [
+          {
+            key: 'admin',
+            icon: <TeamOutlined />,
+            label: 'Gestion des Utilisateurs',
+            onClick: () => navigate('/admin'),
+          } as const,
+          {
+            type: 'divider' as const,
+          },
+        ]
+      : []),
     {
       key: 'logout',
       icon: <LogoutOutlined />,

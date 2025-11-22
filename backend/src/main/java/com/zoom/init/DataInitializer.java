@@ -27,14 +27,26 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        log.info("🔄 DataInitializer - Vérification de la base de données...");
+
+        long userCount = userRepository.count();
+        log.info("📊 DataInitializer - Nombre d'utilisateurs existants: {}", userCount);
+
         // Crée un utilisateur par défaut si aucun utilisateur n'existe
-        if (userRepository.count() == 0) {
+        if (userCount == 0) {
+            log.info("📝 DataInitializer - Création de l'utilisateur admin par défaut...");
+
             User adminUser = new User();
             adminUser.setUsername("admin");
             adminUser.setPassword(passwordEncoder.encode(adminPassword));
             adminUser.setRole("ADMIN");
 
             userRepository.save(adminUser);
+
+            log.info("✅ DataInitializer - Utilisateur admin créé avec le rôle: ADMIN");
+            log.info("🔑 DataInitializer - Username: admin | Password: {} | Role: ADMIN", adminPassword);
+        } else {
+            log.info("ℹ️ DataInitializer - Utilisateurs existants, pas d'initialisation nécessaire");
         }
     }
 }

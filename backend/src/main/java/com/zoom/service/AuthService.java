@@ -1,5 +1,7 @@
 package com.zoom.service;
 
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,5 +81,54 @@ public class AuthService {
      */
     public String getUsernameFromToken(String token) {
         return jwtTokenProvider.extractUsername(token);
+    }
+
+    /**
+     * Récupère tous les utilisateurs
+     */
+    public List<User> getAllUsers() {
+        log.info("Récupération de la liste de tous les utilisateurs");
+        return userRepository.findAll();
+    }
+
+    /**
+     * Récupère un utilisateur par son username
+     */
+    public User getUserByUsername(String username) {
+        log.info("Récupération de l'utilisateur: {}", username);
+        return userRepository.findById(username).orElse(null);
+    }
+
+    /**
+     * Met à jour un utilisateur
+     * Si password est null, le mot de passe n'est pas changé
+     */
+    public User updateUser(String username, String role, String password) {
+        User user = userRepository.findById(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        log.info("Mise à jour de l'utilisateur: {} avec le rôle: {}", username, role);
+
+        user.setRole(role);
+        if (password != null && !password.isEmpty()) {
+            user.setPassword(passwordEncoder.encode(password));
+            log.info("Mot de passe mis à jour pour l'utilisateur: {}", username);
+        }
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Supprime un utilisateur
+     */
+    public boolean deleteUser(String username) {
+        if (!userRepository.existsById(username)) {
+            log.warn("Tentative de suppression d'un utilisateur inexistant: {}", username);
+            return false;
+        }
+
+        log.info("Suppression de l'utilisateur: {}", username);
+        userRepository.deleteById(username);
+        return true;
     }
 }
