@@ -24,7 +24,6 @@ echo   - ZOOM_ACCOUNT_ID: %ZOOM_ACCOUNT_ID%
 echo   - ZOOM_CLIENT_ID: %ZOOM_CLIENT_ID%
 echo   - ZOOM_CLIENT_SECRET: ****
 echo   - ZOOM_USER_ID: %ZOOM_USER_ID%
-echo   - MEETING_ID: %MEETING_ID%
 
 REM Verifier si Maven est installe
 where mvn >nul 2>&1
