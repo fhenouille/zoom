@@ -45,9 +45,14 @@ apiClient.interceptors.response.use(
   (error) => {
     // Gérer les erreurs globalement
     if (error.response?.status === 401) {
-      // Token invalide ou expiré : rediriger vers la page de connexion
-      authToken = null;
-      globalThis.location.href = '/login';
+      // Vérifier si c'est une erreur de login (pas d'endpoint /auth/login)
+      // Rediriger seulement si le token est invalide/expiré (pas une simple erreur de credentials)
+      if (!error.config?.url?.includes('/auth/login')) {
+        // Token invalide ou expiré : rediriger vers la page de connexion
+        authToken = null;
+        globalThis.location.href = '/login';
+      }
+      // Pour /auth/login, laisser le frontend gérer l'erreur (message d'erreur sur la page)
     }
     return Promise.reject(error);
   }

@@ -26,15 +26,15 @@ public class AuthController {
      * Endpoint de connexion
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<Object> login(@RequestBody LoginRequest request) {
         try {
             log.info("📨 POST /api/auth/login - Tentative de connexion pour: {}", request.getUsername());
             AuthResponse response = authService.login(request);
             log.info("✅ POST /api/auth/login - Connexion réussie");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok((Object) response);
         } catch (Exception e) {
             log.error("❌ POST /api/auth/login - Erreur: {}", e.getMessage());
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).body((Object) new com.zoom.dto.ErrorResponse("Identifiants incorrects"));
         }
     }
 
