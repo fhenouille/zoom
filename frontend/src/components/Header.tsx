@@ -30,6 +30,10 @@ function Header() {
       icon: <CalendarOutlined />,
       label: 'Réunions',
     },
+    {
+      key: '/guide',
+      label: '📚 Guide',
+    },
   ];
 
   const handleLogout = () => {

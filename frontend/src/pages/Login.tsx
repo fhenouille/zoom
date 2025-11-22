@@ -19,7 +19,10 @@ function Login() {
     try {
       await login(values.username, values.password);
       message.success('Connexion réussie !');
-      navigate('/meetings');
+      // Récupérer l'URL destination enregistrée ou rediriger vers /meetings par défaut
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/meetings';
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirectUrl);
     } catch (error) {
       message.error('Identifiants incorrects');
       console.error('Erreur de connexion:', error);

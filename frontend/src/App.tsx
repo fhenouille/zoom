@@ -3,6 +3,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Admin } from './pages/Admin';
+import Guide from './pages/Guide';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Meetings from './pages/Meetings';
@@ -44,6 +45,16 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <Admin />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/guide"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Guide />
             </Layout>
           </ProtectedRoute>
         }
