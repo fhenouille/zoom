@@ -56,7 +56,7 @@ public class MeetingService {
             syncMeetingsFromZoom();
         }
 
-        // Si aucun filtre n'est fourni, retourne tout
+        // Si aucun filtre n'est fourni, retourne toutmeetingser
         if (startDate == null && endDate == null) {
             return meetingRepository.findAll();
         }
