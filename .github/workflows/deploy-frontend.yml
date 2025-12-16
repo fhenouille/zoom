@@ -28,7 +28,7 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "Creating .env file for production build..."
-          echo "VITE_API_BASE_URL=https://zoom-production-1b9e.up.railway.app/api" > .env
+          echo "VITE_API_BASE_URL=https://zoom.henouille.fr/api" > .env
           echo "VITE_APP_NAME=Zoom Meetings" >> .env
           echo "✅ Created .env with content:"
           cat .env
@@ -42,7 +42,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          VITE_API_BASE_URL: 'https://zoom-production-1b9e.up.railway.app/api'
+          VITE_API_BASE_URL: 'https://zoom.henouille.fr/api'
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
