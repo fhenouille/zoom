@@ -5,7 +5,9 @@ const { Footer: AntFooter } = Layout;
 function Footer() {
   const currentYear = new Date().getFullYear();
 
-  return <AntFooter style={{ textAlign: 'center' }}>Zoom Meetings ©{currentYear}</AntFooter>;
+  return (
+    <AntFooter style={{ textAlign: 'center' }}>Zoom Meetings ©{currentYear} - v1.0.1</AntFooter>
+  );
 }
 
 export default Footer;
