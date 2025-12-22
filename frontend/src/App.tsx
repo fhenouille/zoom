@@ -7,6 +7,7 @@ import Guide from './pages/Guide';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Meetings from './pages/Meetings';
+import Statistics from './pages/Statistics';
 
 function App() {
   const location = useLocation();
@@ -35,6 +36,16 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <Meetings />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/statistics"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Statistics />
             </Layout>
           </ProtectedRoute>
         }

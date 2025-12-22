@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import {
+  BarChartOutlined,
   CalendarOutlined,
   HomeOutlined,
   LogoutOutlined,
@@ -29,6 +30,11 @@ function Header() {
       key: '/meetings',
       icon: <CalendarOutlined />,
       label: 'Réunions',
+    },
+    {
+      key: '/statistics',
+      icon: <BarChartOutlined />,
+      label: 'Statistiques',
     },
     {
       key: '/guide',

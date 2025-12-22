@@ -2,15 +2,14 @@ package com.zoom.service;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.zoom.dto.MeetingWithAssistance;
-import com.zoom.dto.ZoomMeeting;
+import com.zoom.dto.*;
+import com.zoom.dto.AssistanceStatisticsResponse.DailyAssistanceStats;
 import com.zoom.entity.Meeting;
 import com.zoom.entity.MeetingAssistance;
 import com.zoom.repository.MeetingAssistanceRepository;
@@ -301,5 +300,63 @@ public class MeetingService {
     public List<Meeting> getUpcomingMeetings() {
         log.info("Récupération des réunions à venir");
         return meetingRepository.findByStartAfter(LocalDateTime.now());
+    }
+
+    /**
+     * Récupère les statistiques d'assistance pour une période donnée
+     * Regroupe les données par jour
+     */
+    @Transactional(readOnly = true)
+    public AssistanceStatisticsResponse getAssistanceStatistics(LocalDateTime startDate, LocalDateTime endDate) {
+        log.info("Récupération des statistiques d'assistance (startDate: {}, endDate: {})", startDate, endDate);
+
+        // Récupère tous les meetings dans la période
+        List<Meeting> meetings = meetingRepository.findByStartBetween(startDate, endDate);
+
+        // Map pour regrouper les statistiques par jour
+        Map<LocalDate, DailyAssistanceStats> dailyStatsMap = new HashMap<>();
+
+        for (Meeting meeting : meetings) {
+            // Récupère les données d'assistance pour ce meeting
+            Optional<MeetingAssistance> assistanceOpt = meetingAssistanceRepository.findByMeetingId(meeting.getId());
+
+            if (assistanceOpt.isPresent()) {
+                MeetingAssistance assistance = assistanceOpt.get();
+                LocalDate date = meeting.getStart().toLocalDate();
+
+                // Récupère ou crée les stats pour ce jour
+                DailyAssistanceStats stats = dailyStatsMap.computeIfAbsent(date, d -> {
+                    DailyAssistanceStats newStats = new DailyAssistanceStats();
+                    newStats.setDate(d.toString());
+                    newStats.setInPerson(0);
+                    newStats.setRemote(0);
+                    newStats.setTotal(0);
+                    newStats.setMeetingCount(0);
+                    return newStats;
+                });
+
+                // Le champ "total" dans MeetingAssistance représente le nombre de participants en visio
+                // Le champ "inPersonTotal" représente le nombre de participants en présentiel
+
+                // Accumule les statistiques
+                stats.setInPerson(stats.getInPerson() + assistance.getInPersonTotal());
+                stats.setRemote(stats.getRemote() + assistance.getTotal()); // total = visio uniquement
+                stats.setTotal(stats.getTotal() + assistance.getTotal() + assistance.getInPersonTotal());
+                stats.setMeetingCount(stats.getMeetingCount() + 1);
+            }
+        }
+
+        // Convertit la map en liste triée par date
+        List<DailyAssistanceStats> dailyStatsList = dailyStatsMap.values().stream()
+                .sorted((a, b) -> a.getDate().compareTo(b.getDate()))
+                .collect(Collectors.toList());
+
+        AssistanceStatisticsResponse response = new AssistanceStatisticsResponse();
+        response.setDailyStats(dailyStatsList);
+        response.setStartDate(startDate);
+        response.setEndDate(endDate);
+
+        log.info("Statistiques récupérées: {} jours avec données", dailyStatsList.size());
+        return response;
     }
 }

@@ -214,4 +214,31 @@ public class MeetingController {
 
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Récupère les statistiques d'assistance pour une période donnée
+     */
+    @GetMapping("/statistics")
+    public ResponseEntity<AssistanceStatisticsResponse> getAssistanceStatistics(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endDate) {
+        log.info("📊 GET /api/meetings/statistics - Récupération des statistiques (startDate: {}, endDate: {})", startDate, endDate);
+        long startTime = System.currentTimeMillis();
+
+        // Si les dates ne sont pas fournies, utilise les 30 derniers jours
+        if (startDate == null) {
+            startDate = java.time.LocalDateTime.now().minusDays(30);
+        }
+        if (endDate == null) {
+            endDate = java.time.LocalDateTime.now();
+        }
+
+        AssistanceStatisticsResponse statistics = meetingService.getAssistanceStatistics(startDate, endDate);
+
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("📤 GET /api/meetings/statistics - Réponse: {} jours avec données en {}ms",
+            statistics.getDailyStats().size(), duration);
+
+        return ResponseEntity.ok(statistics);
+    }
 }
