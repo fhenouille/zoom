@@ -116,7 +116,7 @@ function Meetings() {
       try {
         await participantService.saveAssistance(selectedMeeting.id, total, inPersonValue, values);
         message.success('Assistance sauvegardée');
-        
+
         // Mettre à jour la liste des réunions pour afficher les nouvelles valeurs d'assistance
         setFilteredMeetings((prevMeetings) =>
           prevMeetings.map((meeting) =>
