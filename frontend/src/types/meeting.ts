@@ -7,4 +7,7 @@ export interface Meeting {
   hostEmail?: string;
   duration?: number;
   timezone?: string;
+  // Données d'assistance sauvegardées (null si pas encore sauvegardées)
+  inPersonTotal?: number | null;
+  videoconferenceTotal?: number | null;
 }

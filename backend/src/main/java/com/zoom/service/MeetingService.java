@@ -4,12 +4,16 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.zoom.dto.MeetingWithAssistance;
 import com.zoom.dto.ZoomMeeting;
 import com.zoom.entity.Meeting;
+import com.zoom.entity.MeetingAssistance;
+import com.zoom.repository.MeetingAssistanceRepository;
 import com.zoom.repository.MeetingRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,6 +30,7 @@ public class MeetingService {
 
     private final MeetingRepository meetingRepository;
     private final ZoomApiService zoomApiService;
+    private final MeetingAssistanceRepository meetingAssistanceRepository;
 
     /**
      * Récupère toutes les réunions
@@ -39,6 +44,51 @@ public class MeetingService {
         syncMeetingsFromZoom();
 
         return meetingRepository.findAll();
+    }
+
+    /**
+     * Récupère les réunions filtrées par date avec les données d'assistance
+     * Synchronise toujours avec Zoom d'abord, puis applique les filtres si fournis
+     */
+    @Transactional
+    public List<MeetingWithAssistance> getMeetingsByDateRangeWithAssistance(LocalDateTime startDate, LocalDateTime endDate) {
+        log.info("Récupération des réunions avec assistance (startDate: {}, endDate: {})", startDate, endDate);
+
+        // Récupère les meetings
+        List<Meeting> meetings = getMeetingsByDateRange(startDate, endDate);
+
+        // Convertit en DTO avec les données d'assistance
+        return meetings.stream()
+                .map(this::convertToMeetingWithAssistance)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Convertit une entité Meeting en DTO MeetingWithAssistance
+     */
+    private MeetingWithAssistance convertToMeetingWithAssistance(Meeting meeting) {
+        MeetingWithAssistance dto = new MeetingWithAssistance();
+        dto.setId(meeting.getId());
+        dto.setStart(meeting.getStart());
+        dto.setEnd(meeting.getEnd());
+        dto.setTopic(meeting.getTopic());
+        dto.setHostName(meeting.getHostName());
+        dto.setHostEmail(meeting.getHostEmail());
+        dto.setDuration(meeting.getDuration());
+        dto.setTimezone(meeting.getTimezone());
+
+        // Récupère les données d'assistance si elles existent
+        Optional<MeetingAssistance> assistanceOpt = meetingAssistanceRepository.findByMeetingId(meeting.getId());
+        if (assistanceOpt.isPresent()) {
+            MeetingAssistance assistance = assistanceOpt.get();
+            dto.setInPersonTotal(assistance.getInPersonTotal());
+            dto.setVideoconferenceTotal(assistance.getTotal());
+        } else {
+            dto.setInPersonTotal(null);
+            dto.setVideoconferenceTotal(null);
+        }
+
+        return dto;
     }
 
     /**

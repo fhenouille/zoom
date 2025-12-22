@@ -23,7 +23,6 @@ import {
   Spin,
   Switch,
   Table,
-  Tag,
   Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -421,21 +420,28 @@ function Meetings() {
       ),
     },
     {
-      title: 'Statut',
-      key: 'status',
-      render: (_: unknown, record: Meeting) => {
-        const now = new Date();
-        const start = new Date(record.start);
-        const end = new Date(record.end);
-
-        if (now < start) {
-          return <Tag color="blue">À venir</Tag>;
-        } else if (now >= start && now <= end) {
-          return <Tag color="green">En cours</Tag>;
-        } else {
-          return <Tag color="default">Terminée</Tag>;
-        }
-      },
+      title: 'Assistance sauvegardée',
+      key: 'assistance',
+      children: [
+        {
+          title: 'Présentiel',
+          key: 'inPerson',
+          width: 100,
+          align: 'center' as const,
+          render: (_: unknown, record: Meeting) => {
+            return record.inPersonTotal ?? '-';
+          },
+        },
+        {
+          title: 'Visioconférence',
+          key: 'videoconference',
+          width: 130,
+          align: 'center' as const,
+          render: (_: unknown, record: Meeting) => {
+            return record.videoconferenceTotal ?? '-';
+          },
+        },
+      ],
     },
     {
       title: 'Actions',

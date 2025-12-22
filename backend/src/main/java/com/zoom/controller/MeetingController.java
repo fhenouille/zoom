@@ -33,16 +33,16 @@ public class MeetingController {
     private final MeetingAssistanceRepository meetingAssistanceRepository;
 
     /**
-     * Récupère toutes les réunions avec filtres optionnels de date
+     * Récupère toutes les réunions avec filtres optionnels de date et données d'assistance
      */
     @GetMapping
-    public ResponseEntity<List<Meeting>> getAllMeetings(
+    public ResponseEntity<List<MeetingWithAssistance>> getAllMeetings(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endDate) {
         log.info("📥 GET /api/meetings - Récupération des réunions (startDate: {}, endDate: {})", startDate, endDate);
         long startTime = System.currentTimeMillis();
 
-        List<Meeting> meetings = meetingService.getMeetingsByDateRange(startDate, endDate);
+        List<MeetingWithAssistance> meetings = meetingService.getMeetingsByDateRangeWithAssistance(startDate, endDate);
 
         long duration = System.currentTimeMillis() - startTime;
         log.info("📤 GET /api/meetings - Réponse: {} meetings en {}ms", meetings.size(), duration);
