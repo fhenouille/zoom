@@ -116,6 +116,15 @@ function Meetings() {
       try {
         await participantService.saveAssistance(selectedMeeting.id, total, inPersonValue, values);
         message.success('Assistance sauvegardée');
+        
+        // Mettre à jour la liste des réunions pour afficher les nouvelles valeurs d'assistance
+        setFilteredMeetings((prevMeetings) =>
+          prevMeetings.map((meeting) =>
+            meeting.id === selectedMeeting.id
+              ? { ...meeting, inPersonTotal: inPersonValue, videoconferenceTotal: total }
+              : meeting
+          )
+        );
       } catch (err) {
         message.error('Erreur lors de la sauvegarde');
         console.error(err);
