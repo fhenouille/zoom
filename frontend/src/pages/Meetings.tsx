@@ -43,7 +43,7 @@ function Meetings() {
   const [loadingPolls, setLoadingPolls] = useState(false);
   const [pollsAvailability, setPollsAvailability] = useState<Map<number, boolean>>(new Map());
   const [checkingPolls, setCheckingPolls] = useState<Set<number>>(new Set());
-  const [assistanceValues, setAssistanceValues] = useState<Map<number, number>>(new Map());
+  const [assistanceValues, setAssistanceValues] = useState<Map<number, number | string>>(new Map());
   const [attendancePollData, setAttendancePollData] = useState<Map<string, string>>(new Map());
   const [showAssistanceColumns, setShowAssistanceColumns] = useState(false);
   const [inPersonValue, setInPersonValue] = useState<number>(0);
@@ -86,7 +86,11 @@ function Meetings() {
   const calculateTotalAssistance = (): number => {
     let total = 0;
     assistanceValues.forEach((value) => {
-      total += value;
+      const numValue =
+        typeof value === 'string' ? (value === '' ? 0 : Number.parseInt(value, 10)) : value;
+      if (!isNaN(numValue)) {
+        total += numValue;
+      }
     });
     return total;
   };
@@ -98,7 +102,15 @@ function Meetings() {
       // Créer un objet avec participantId => valeur au lieu d'un array
       const values: Record<number, number> = {};
       participants.forEach((p) => {
-        values[p.id] = assistanceValues.get(p.id) ?? 1;
+        const value = assistanceValues.get(p.id);
+        // Convertir les chaînes vides en 0, les chaînes valides en nombre, ou utiliser 1 par défaut
+        if (value === '') {
+          values[p.id] = 0;
+        } else if (typeof value === 'string') {
+          values[p.id] = Number.parseInt(value, 10) || 1;
+        } else {
+          values[p.id] = value ?? 1;
+        }
       });
 
       try {
@@ -316,8 +328,11 @@ function Meetings() {
     return `${mins}min`;
   };
 
-  const handleAssistanceChange = (participantId: number, value: number | null) => {
-    if (value !== null && value >= 0 && value < 100) {
+  const handleAssistanceChange = (participantId: number, value: number | string) => {
+    // Permettre les chaînes vides temporairement pour que l'utilisateur puisse saisir
+    if (value === '' || value === null || value === undefined) {
+      setAssistanceValues((prev) => new Map(prev).set(participantId, ''));
+    } else if (typeof value === 'number' && value >= 0 && value < 100) {
       setAssistanceValues((prev) => new Map(prev).set(participantId, value));
     }
   };
@@ -339,16 +354,30 @@ function Meetings() {
             title: 'Assistance',
             key: 'assistance',
             width: 120,
-            render: (_: unknown, record: Participant) => (
-              <input
-                type="number"
-                min="0"
-                max="99"
-                value={assistanceValues.get(record.id) ?? 1}
-                onChange={(e) => handleAssistanceChange(record.id, Number.parseInt(e.target.value))}
-                style={{ width: '60px', textAlign: 'center' }}
-              />
-            ),
+            render: (_: unknown, record: Participant) => {
+              const currentValue = assistanceValues.get(record.id);
+              const displayValue = currentValue === undefined ? 1 : currentValue;
+              return (
+                <input
+                  type="number"
+                  min="0"
+                  max="99"
+                  value={displayValue}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '') {
+                      handleAssistanceChange(record.id, '');
+                    } else {
+                      const numValue = Number.parseInt(value, 10);
+                      if (!isNaN(numValue)) {
+                        handleAssistanceChange(record.id, numValue);
+                      }
+                    }
+                  }}
+                  style={{ width: '60px', textAlign: 'center' }}
+                />
+              );
+            },
           },
         ]
       : []),
