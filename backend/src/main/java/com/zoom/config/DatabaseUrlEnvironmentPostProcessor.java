@@ -56,7 +56,7 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             }
 
             environment.getPropertySources().addFirst(
-                new MapPropertySource("railway-database-url", properties)
+                new MapPropertySource("database-url", properties)
             );
 
             System.out.println("✅ spring.datasource.url configured with converted URL");
@@ -89,7 +89,7 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
     /**
      * Convertit les formats postgres:// et postgresql:// en jdbc:postgresql://
-     * Railway provides: postgresql://user:pass@postgres.railway.internal:5432/railway
+     * Format attendu: postgresql://user:pass@host:5432/database
      * IMPORTANT: Removes credentials from URL and returns clean URL without user:pass
      */
     private String convertToJdbc(String databaseUrl) {

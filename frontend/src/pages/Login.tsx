@@ -11,7 +11,7 @@ function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // Production build with Railway backend configured
+  // API configuration from environment variables
   console.log('🔐 Login page loaded - API configured from .env.production');
 
   const onFinish = async (values: { username: string; password: string }) => {

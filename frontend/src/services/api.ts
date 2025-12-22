@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Production: Use Railway backend, Development: Use localhost
+// Production: Use backend URL, Development: Use localhost
 // In production, __API_BASE_URL__ is injected by Vite define()
 // In development, we use localhost
 declare const __API_BASE_URL__: string;

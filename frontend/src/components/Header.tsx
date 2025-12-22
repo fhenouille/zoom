@@ -16,7 +16,7 @@ function Header() {
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
 
-  // Production URL hardcoded for GitHub Pages + Railway
+  // Production mode detection
   console.log('🔧 Header - Production Mode:', !import.meta.env.DEV);
 
   const menuItems = [

@@ -48,7 +48,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- PostgreSQL Driver for Railway -->
+        <!-- PostgreSQL Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
