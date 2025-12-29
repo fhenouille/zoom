@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ZoomBackendApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(ZoomBackendApplication.class);
-    private static final String VERSION = "1.0.1";
+    private static final String VERSION = "1.1.0";
 
     public static void main(String[] args) {
         logger.info("\n" +

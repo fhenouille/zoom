@@ -25,6 +25,9 @@ target/
 .settings/
 bin/
 
+# Docker / Podman images
+*.tar
+
 # H2 Database
 *.db
 *.mv.db
