@@ -77,7 +77,6 @@ function Statistics() {
   const avgInPerson = Math.round(totalInPerson / daysWithData);
   const avgRemote = Math.round(totalRemote / daysWithData);
   const avgTotal = Math.round(totalAssistance / daysWithData);
-  const avgMeetings = (totalMeetings / daysWithData).toFixed(1);
 
   // Détermine le contenu à afficher
   const renderChartContent = () => {
