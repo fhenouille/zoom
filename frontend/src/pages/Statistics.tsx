@@ -66,8 +66,6 @@ function Statistics() {
   // Calcule les moyennes
   const totalInPerson = statistics?.dailyStats.reduce((sum, stat) => sum + stat.inPerson, 0) || 0;
   const totalRemote = statistics?.dailyStats.reduce((sum, stat) => sum + stat.remote, 0) || 0;
-  const totalMeetings =
-    statistics?.dailyStats.reduce((sum, stat) => sum + stat.meetingCount, 0) || 0;
   const totalAssistance = totalInPerson + totalRemote;
 
   // Nombre de jours avec des données
