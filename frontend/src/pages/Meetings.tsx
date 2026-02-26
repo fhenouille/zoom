@@ -128,10 +128,15 @@ function Meetings() {
         okCancel: true,
         onOk: () => {
           // Mettre le focus sur le champ en présentiel
+          // Utiliser plusieurs tentatives avec des délais pour être sûr que le focus est bien mis
           setTimeout(() => {
             inPersonInputRef.current?.focus();
             inPersonInputRef.current?.select();
-          }, 100);
+          }, 200);
+          setTimeout(() => {
+            inPersonInputRef.current?.focus();
+            inPersonInputRef.current?.select();
+          }, 400);
         },
         onCancel: () => {
           // Vérifier s'il y a d'autres modifications à sauvegarder
