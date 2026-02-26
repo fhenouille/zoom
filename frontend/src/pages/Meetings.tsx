@@ -26,7 +26,7 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { Dayjs } from 'dayjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const { Title } = Typography;
 
@@ -52,6 +52,7 @@ function Meetings() {
   const [startDate, setStartDate] = useState<Dayjs>(dayjs().subtract(7, 'days'));
   const [endDate, setEndDate] = useState<Dayjs>(dayjs());
   const [filteredMeetings, setFilteredMeetings] = useState<Meeting[]>([]);
+  const inPersonInputRef = useRef<any>(null);
 
   // Fonction pour calculer la valeur initiale d'assistance selon les règles de priorité
   const calculateInitialAssistance = (name: string, pollAnswer?: string): number => {
@@ -117,7 +118,8 @@ function Meetings() {
   // Gérer la fermeture de la modal avec vérification des modifications
   const handleCloseModal = () => {
     // Vérifier d'abord si l'assistance en présentiel n'a pas été saisie
-    if (inPersonValue === 0 && hasChanges()) {
+    // Toujours avertir si inPersonValue = 0
+    if (inPersonValue === 0) {
       Modal.warning({
         title: 'Attention',
         content: "L'assistance en présentiel n'a pas été saisie !",
@@ -125,7 +127,11 @@ function Meetings() {
         cancelText: 'Fermer sans saisir',
         okCancel: true,
         onOk: () => {
-          // Ne rien faire, rester sur la modal
+          // Mettre le focus sur le champ en présentiel
+          setTimeout(() => {
+            inPersonInputRef.current?.focus();
+            inPersonInputRef.current?.select();
+          }, 100);
         },
         onCancel: () => {
           // Vérifier s'il y a d'autres modifications à sauvegarder
@@ -710,6 +716,7 @@ function Meetings() {
                   En présentiel:
                 </span>
                 <InputNumber
+                  ref={inPersonInputRef}
                   min={0}
                   max={999}
                   value={inPersonValue}
