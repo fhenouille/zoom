@@ -1,7 +1,7 @@
 import { statisticsService } from '@/services/statisticsService';
 import { AssistanceStatisticsResponse } from '@/types/statistics';
 import { BarChartOutlined, CalendarOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Card, DatePicker, Empty, Space, Spin, Typography } from 'antd';
+import { Button, Card, DatePicker, Empty, Select, Space, Spin, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { useEffect, useState } from 'react';
 import {
@@ -9,6 +9,8 @@ import {
   BarChart,
   CartesianGrid,
   Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -23,6 +25,7 @@ function Statistics() {
   const [statistics, setStatistics] = useState<AssistanceStatisticsResponse | null>(null);
   const [startDate, setStartDate] = useState<Dayjs>(dayjs().subtract(30, 'days'));
   const [endDate, setEndDate] = useState<Dayjs>(dayjs());
+  const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
 
   // Charge les statistiques
   const loadStatistics = async () => {
@@ -100,23 +103,55 @@ function Statistics() {
       <div>
         <Title level={4}>Assistance par Jour</Title>
         <ResponsiveContainer width="100%" height={400}>
-          <BarChart
-            data={chartData}
-            margin={{
-              top: 20,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="Présentiel" fill="#1890ff" />
-            <Bar dataKey="Visio" fill="#52c41a" />
-          </BarChart>
+          {chartType === 'bar' ? (
+            <BarChart
+              data={chartData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Présentiel" fill="#1890ff" />
+              <Bar dataKey="Visio" fill="#52c41a" />
+            </BarChart>
+          ) : (
+            <LineChart
+              data={chartData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="Présentiel"
+                stroke="#1890ff"
+                strokeWidth={2}
+                dot={{ fill: '#1890ff' }}
+              />
+              <Line
+                type="monotone"
+                dataKey="Visio"
+                stroke="#52c41a"
+                strokeWidth={2}
+                dot={{ fill: '#52c41a' }}
+              />
+            </LineChart>
+          )}
         </ResponsiveContainer>
       </div>
     );
@@ -131,7 +166,7 @@ function Statistics() {
       {/* Filtres de date */}
       <Card style={{ marginBottom: '24px' }}>
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Space>
+          <Space wrap>
             <CalendarOutlined />
             <span>Période :</span>
             <RangePicker
@@ -139,6 +174,15 @@ function Statistics() {
               onChange={handleDateRangeChange}
               format="DD/MM/YYYY"
               placeholder={['Date de début', 'Date de fin']}
+            />
+            <Select
+              value={chartType}
+              onChange={setChartType}
+              style={{ width: 150 }}
+              options={[
+                { value: 'bar', label: 'Histogramme' },
+                { value: 'line', label: 'Courbes' },
+              ]}
             />
             <Button icon={<ReloadOutlined />} onClick={loadStatistics}>
               Actualiser
