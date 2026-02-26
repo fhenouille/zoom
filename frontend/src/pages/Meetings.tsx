@@ -657,6 +657,8 @@ function Meetings() {
             dataSource={participants}
             rowKey="id"
             pagination={false}
+            scroll={{ y: 500 }}
+            sticky
             locale={{
               emptyText: 'Aucun participant',
             }}
