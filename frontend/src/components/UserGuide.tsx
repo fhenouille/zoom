@@ -84,6 +84,9 @@ const UserGuide: React.FC = () => {
       title: '📋 Affichage des Réunions',
       content: (
         <div className="guide-section-content">
+          <div className="tip">
+            💡 Une réunion apparaît dans la liste quand elle a été <strong>quittée pour tous</strong>
+          </div>
           <ol>
             <li>
               <strong>Chargement de la liste</strong>
@@ -147,34 +150,7 @@ const UserGuide: React.FC = () => {
             </li>
           </ol>
 
-          <h4>Étape 2️⃣ : Activer l'assistance</h4>
-          <ol>
-            <li>
-              <strong>Utiliser le switch "Assistance"</strong>
-              <ul>
-                <li>Un switch est disponible en haut du tableau</li>
-                <li>Par défaut, il est désactivé (affichage simple)</li>
-              </ul>
-            </li>
-            <li>
-              <strong>Activation du switch</strong>
-              <ul>
-                <li>Cliquez sur le switch pour l'activer</li>
-                <li>2 colonnes supplémentaires apparaissent :</li>
-                <li>
-                  <strong>Colonne 1 : "Assistance"</strong> - Saisissable, pour valider/modifier
-                  l'assistance proposée
-                </li>
-                <li>
-                  <strong>Colonne 2 : "Sondage"</strong> - Information uniquement (s'affiche si un
-                  sondage a été lancé pendant la réunion); "-" affiché si la personne n'a pas
-                  répondu
-                </li>
-              </ul>
-            </li>
-          </ol>
-
-          <h4>Étape 3️⃣ : Tri et organisation</h4>
+          <h4>Étape 2️⃣ : Tri et organisation</h4>
           <ol>
             <li>
               <strong>Possibilités de tri</strong>
@@ -394,19 +370,14 @@ const UserGuide: React.FC = () => {
             <strong>Processus type d'une session :</strong>
           </p>
           <ol>
-            <li>✅ Connexion à l'application</li>
-            <li>✅ Accueil → Clic "Voir les réunions"</li>
-            <li>✅ Affichage des 7 derniers jours (données Zoom chargées)</li>
-            <li>✅ Attendre quelques secondes (sondages se déverrouillent)</li>
+            <li>✅ Quitter la réunion pour tous (voir avec la sonorisation si vous n'avez pas les droits)</li>
+            <li>✅ Se connecter à l'application</li>
+            <li>✅ Cliquer "Voir les réunions"</li>
+            <li>✅ Attendre quelques secondes (les sondages se déverrouillent)</li>
             <li>✅ Sélectionner une réunion → Clic "Participants"</li>
-            <li>✅ Tableau apparaît (participants regroupés, durées cumulées)</li>
-            <li>✅ Activer le switch "Assistance"</li>
-            <li>✅ 2 colonnes supplémentaires apparaissent (Assistance + Sondage)</li>
-            <li>✅ Trier par nom ou durée si nécessaire</li>
             <li>✅ Valider/modifier chaque assistance proposée</li>
-            <li>✅ Saisir comptage présentiel si applicable</li>
-            <li>✅ Clic "Sauvegarder"</li>
-            <li>✅ Au besoin : "Actualiser depuis Zoom" pour recommencer</li>
+            <li>✅ Saisir comptage présentiel</li>
+            <li>✅ Cliquer "Sauvegarder"</li>
           </ol>
 
           <div className="tip">
@@ -423,6 +394,9 @@ const UserGuide: React.FC = () => {
         <div className="guide-section-content">
           <ul>
             <li>
+              <strong>Attendre :</strong> La réunion doit avoir été quittée pour tous par l'hôte Zoom
+            </li>
+            <li>
               <strong>Sauvegarde régulière :</strong> Cliquez sur "Sauvegarder" après chaque
               modification importante
             </li>
@@ -433,10 +407,6 @@ const UserGuide: React.FC = () => {
             <li>
               <strong>Croiser les données :</strong> Utilisez la colonne "Sondage" pour consolider
               les informations d'assistance
-            </li>
-            <li>
-              <strong>Actualiser depuis Zoom :</strong> Ne l'utilisez que si vous êtes sûr de
-              vouloir perdre vos modifications locales
             </li>
             <li>
               <strong>Tri intelligent :</strong> Triez par durée croissante pour ne pas
@@ -460,7 +430,7 @@ const UserGuide: React.FC = () => {
             <li>Consultez cette documentation (vous êtes dessus !)</li>
             <li>Essayez de rafraîchir la page (Ctrl+F5)</li>
             <li>Vérifiez votre connexion Internet</li>
-            <li>En cas de données incorrectes, utilisez "Actualiser depuis Zoom"</li>
+            <li>En cas de données incorrectes, vérifiez que la réunion a été quittée pour tous par l'hôte Zoom</li>
             <li>
               Contactez <a href="mailto:fhenouille@gmail.com">fhenouille@gmail.com</a> pour les
               problèmes techniques
@@ -510,7 +480,7 @@ const UserGuide: React.FC = () => {
       </div>
 
       <div className="guide-footer">
-        <p>Version 1.0 | © 2025 Zoom Meeting Manager</p>
+        <p>Version 2.0 | © 2026 Zoom Meeting Manager</p>
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ function Footer() {
 
   return (
     <AntFooter style={{ textAlign: 'center' }}>
-      Zoom Meetings ©{currentYear} - v1.1.0 (Unraid)
+      Zoom Meetings ©{currentYear} - v2.0.0 (Unraid)
     </AntFooter>
   );
 }
