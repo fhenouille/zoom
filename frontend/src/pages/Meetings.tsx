@@ -46,7 +46,9 @@ function Meetings() {
   const [attendancePollData, setAttendancePollData] = useState<Map<string, string>>(new Map());
   const [inPersonValue, setInPersonValue] = useState<number>(0);
   const [initialInPersonValue, setInitialInPersonValue] = useState<number>(0);
-  const [initialAssistanceValues, setInitialAssistanceValues] = useState<Map<number, number | string>>(new Map());
+  const [initialAssistanceValues, setInitialAssistanceValues] = useState<
+    Map<number, number | string>
+  >(new Map());
   const [startDate, setStartDate] = useState<Dayjs>(dayjs().subtract(7, 'days'));
   const [endDate, setEndDate] = useState<Dayjs>(dayjs());
   const [filteredMeetings, setFilteredMeetings] = useState<Meeting[]>([]);
@@ -100,7 +102,7 @@ function Meetings() {
     if (inPersonValue !== initialInPersonValue) {
       return true;
     }
-    
+
     // Vérifier si les valeurs d'assistance ont changé
     for (const [key, value] of assistanceValues) {
       const initialValue = initialAssistanceValues.get(key);
@@ -108,7 +110,7 @@ function Meetings() {
         return true;
       }
     }
-    
+
     return false;
   };
 
