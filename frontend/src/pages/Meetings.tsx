@@ -596,28 +596,51 @@ function Meetings() {
               <TeamOutlined />
               Participants - {selectedMeeting?.topic || 'Meeting'}
             </Space>
-            <Space>
-              <span style={{ fontSize: '14px', fontWeight: 'normal' }}>En présentiel:</span>
-              <InputNumber
-                min={0}
-                max={999}
-                value={inPersonValue}
-                onChange={(value) => setInPersonValue(value ?? 0)}
-                size="small"
-                style={{ width: '70px' }}
-              />
-              <span style={{ fontSize: '14px', fontWeight: 'bold', marginLeft: '8px' }}>
+            <div
+              style={{
+                backgroundColor: '#fff7e6',
+                border: '2px solid #ffa940',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+              }}
+            >
+              <Space size="small">
+                <span
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    color: '#d46b08',
+                  }}
+                >
+                  En présentiel:
+                </span>
+                <InputNumber
+                  min={0}
+                  max={999}
+                  value={inPersonValue}
+                  onChange={(value) => setInPersonValue(value ?? 0)}
+                  style={{
+                    width: '80px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
+                />
+              </Space>
+              <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#1890ff' }}>
                 En visioconférence: {calculateTotalAssistance()}
               </span>
               <Button
                 type="primary"
-                size="small"
                 icon={<SaveOutlined />}
                 onClick={handleSaveAssistance}
+                style={{ fontSize: '14px', height: '36px' }}
               >
                 Sauvegarder
               </Button>
-            </Space>
+            </div>
           </div>
         }
         open={participantsModalVisible}
