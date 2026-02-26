@@ -639,7 +639,7 @@ function Meetings() {
       </Title>
 
       <Card style={{ marginBottom: 16 }}>
-        <Space size="large">
+        <Space size="large" className="meeting-filters" wrap>
           <Space direction="vertical" size="small">
             <label>Date de début</label>
             <DatePicker
@@ -688,11 +688,14 @@ function Meetings() {
       <Modal
         title={
           <div
+            className="participants-modal-header"
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               paddingRight: '40px',
+              flexWrap: 'wrap',
+              gap: '12px',
             }}
           >
             <Space>
@@ -700,6 +703,7 @@ function Meetings() {
               Participants - {selectedMeeting?.topic || 'Meeting'}
             </Space>
             <div
+              className="assistance-controls"
               style={{
                 backgroundColor: '#fff7e6',
                 border: '2px solid #ffa940',
@@ -708,6 +712,7 @@ function Meetings() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '16px',
+                flexWrap: 'wrap',
               }}
             >
               <Space size="small">
