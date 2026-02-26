@@ -21,7 +21,6 @@ import {
   Modal,
   Space,
   Spin,
-  Switch,
   Table,
   Typography,
 } from 'antd';
@@ -45,7 +44,6 @@ function Meetings() {
   const [checkingPolls, setCheckingPolls] = useState<Set<number>>(new Set());
   const [assistanceValues, setAssistanceValues] = useState<Map<number, number | string>>(new Map());
   const [attendancePollData, setAttendancePollData] = useState<Map<string, string>>(new Map());
-  const [showAssistanceColumns, setShowAssistanceColumns] = useState(false);
   const [inPersonValue, setInPersonValue] = useState<number>(0);
   const [startDate, setStartDate] = useState<Dayjs>(dayjs().subtract(7, 'days'));
   const [endDate, setEndDate] = useState<Dayjs>(dayjs());
@@ -357,40 +355,36 @@ function Meetings() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       defaultSortOrder: 'ascend',
     },
-    ...(showAssistanceColumns
-      ? [
-          {
-            title: 'Assistance',
-            key: 'assistance',
-            width: 120,
-            render: (_: unknown, record: Participant) => {
-              const currentValue = assistanceValues.get(record.id);
-              const displayValue = currentValue === undefined ? 1 : currentValue;
-              return (
-                <input
-                  type="number"
-                  min="0"
-                  max="99"
-                  value={displayValue}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === '') {
-                      handleAssistanceChange(record.id, '');
-                    } else {
-                      const numValue = Number.parseInt(value, 10);
-                      if (!isNaN(numValue)) {
-                        handleAssistanceChange(record.id, numValue);
-                      }
-                    }
-                  }}
-                  style={{ width: '60px', textAlign: 'center' }}
-                />
-              );
-            },
-          },
-        ]
-      : []),
-    ...(showAssistanceColumns && hasAttendancePoll
+    {
+      title: 'Assistance',
+      key: 'assistance',
+      width: 120,
+      render: (_: unknown, record: Participant) => {
+        const currentValue = assistanceValues.get(record.id);
+        const displayValue = currentValue === undefined ? 1 : currentValue;
+        return (
+          <input
+            type="number"
+            min="0"
+            max="99"
+            value={displayValue}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '') {
+                handleAssistanceChange(record.id, '');
+              } else {
+                const numValue = Number.parseInt(value, 10);
+                if (!isNaN(numValue)) {
+                  handleAssistanceChange(record.id, numValue);
+                }
+              }
+            }}
+            style={{ width: '60px', textAlign: 'center' }}
+          />
+        );
+      },
+    },
+    ...(hasAttendancePoll
       ? [
           {
             title: 'Sondage',
@@ -513,8 +507,8 @@ function Meetings() {
                 hasPoll === false
                   ? 'Aucun sondage disponible'
                   : hasPoll === true
-                  ? 'Afficher les sondages'
-                  : 'Vérification en cours...'
+                    ? 'Afficher les sondages'
+                    : 'Vérification en cours...'
               }
             >
               Sondages
@@ -603,45 +597,32 @@ function Meetings() {
               Participants - {selectedMeeting?.topic || 'Meeting'}
             </Space>
             <Space>
-              <span style={{ fontSize: '14px', fontWeight: 'normal' }}>Assistance</span>
-              <Switch
-                checked={showAssistanceColumns}
-                onChange={setShowAssistanceColumns}
+              <span style={{ fontSize: '14px', fontWeight: 'normal' }}>En présentiel:</span>
+              <InputNumber
+                min={0}
+                max={999}
+                value={inPersonValue}
+                onChange={(value) => setInPersonValue(value ?? 0)}
                 size="small"
+                style={{ width: '70px' }}
               />
-              {showAssistanceColumns && (
-                <>
-                  <span style={{ fontSize: '14px', fontWeight: 'normal', marginLeft: '8px' }}>
-                    En présentiel:
-                  </span>
-                  <InputNumber
-                    min={0}
-                    max={999}
-                    value={inPersonValue}
-                    onChange={(value) => setInPersonValue(value ?? 0)}
-                    size="small"
-                    style={{ width: '70px' }}
-                  />
-                  <span style={{ fontSize: '14px', fontWeight: 'bold', marginLeft: '8px' }}>
-                    En visioconférence: {calculateTotalAssistance()}
-                  </span>
-                  <Button
-                    type="primary"
-                    size="small"
-                    icon={<SaveOutlined />}
-                    onClick={handleSaveAssistance}
-                  >
-                    Sauvegarder
-                  </Button>
-                </>
-              )}
+              <span style={{ fontSize: '14px', fontWeight: 'bold', marginLeft: '8px' }}>
+                En visioconférence: {calculateTotalAssistance()}
+              </span>
+              <Button
+                type="primary"
+                size="small"
+                icon={<SaveOutlined />}
+                onClick={handleSaveAssistance}
+              >
+                Sauvegarder
+              </Button>
             </Space>
           </div>
         }
         open={participantsModalVisible}
         onCancel={() => {
           setParticipantsModalVisible(false);
-          setShowAssistanceColumns(false);
           setInPersonValue(0);
         }}
         width={1000}
@@ -658,7 +639,6 @@ function Meetings() {
             key="close"
             onClick={() => {
               setParticipantsModalVisible(false);
-              setShowAssistanceColumns(false);
               setInPersonValue(0);
             }}
           >
