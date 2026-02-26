@@ -45,6 +45,8 @@ function Meetings() {
   const [assistanceValues, setAssistanceValues] = useState<Map<number, number | string>>(new Map());
   const [attendancePollData, setAttendancePollData] = useState<Map<string, string>>(new Map());
   const [inPersonValue, setInPersonValue] = useState<number>(0);
+  const [initialInPersonValue, setInitialInPersonValue] = useState<number>(0);
+  const [initialAssistanceValues, setInitialAssistanceValues] = useState<Map<number, number | string>>(new Map());
   const [startDate, setStartDate] = useState<Dayjs>(dayjs().subtract(7, 'days'));
   const [endDate, setEndDate] = useState<Dayjs>(dayjs());
   const [filteredMeetings, setFilteredMeetings] = useState<Meeting[]>([]);
@@ -93,6 +95,84 @@ function Meetings() {
     return total;
   };
 
+  // Vérifier si des modifications ont été apportées
+  const hasChanges = (): boolean => {
+    if (inPersonValue !== initialInPersonValue) {
+      return true;
+    }
+    
+    // Vérifier si les valeurs d'assistance ont changé
+    for (const [key, value] of assistanceValues) {
+      const initialValue = initialAssistanceValues.get(key);
+      if (value !== initialValue) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
+  // Gérer la fermeture de la modal avec vérification des modifications
+  const handleCloseModal = () => {
+    // Vérifier d'abord si l'assistance en présentiel n'a pas été saisie
+    if (inPersonValue === 0 && hasChanges()) {
+      Modal.warning({
+        title: 'Attention',
+        content: "L'assistance en présentiel n'a pas été saisie !",
+        okText: 'Saisir maintenant',
+        cancelText: 'Fermer sans saisir',
+        okCancel: true,
+        onOk: () => {
+          // Ne rien faire, rester sur la modal
+        },
+        onCancel: () => {
+          // Vérifier s'il y a d'autres modifications à sauvegarder
+          if (hasChanges()) {
+            Modal.confirm({
+              title: 'Modifications non sauvegardées',
+              content: 'Voulez-vous sauvegarder les modifications avant de fermer ?',
+              okText: 'Sauvegarder',
+              cancelText: 'Fermer sans sauvegarder',
+              onOk: async () => {
+                await handleSaveAssistance();
+                setParticipantsModalVisible(false);
+                setInPersonValue(0);
+              },
+              onCancel: () => {
+                setParticipantsModalVisible(false);
+                setInPersonValue(0);
+              },
+            });
+          } else {
+            setParticipantsModalVisible(false);
+            setInPersonValue(0);
+          }
+        },
+      });
+    } else if (hasChanges()) {
+      // Il y a des modifications mais l'assistance en présentiel a été saisie
+      Modal.confirm({
+        title: 'Modifications non sauvegardées',
+        content: 'Voulez-vous sauvegarder les modifications avant de fermer ?',
+        okText: 'Sauvegarder',
+        cancelText: 'Fermer sans sauvegarder',
+        onOk: async () => {
+          await handleSaveAssistance();
+          setParticipantsModalVisible(false);
+          setInPersonValue(0);
+        },
+        onCancel: () => {
+          setParticipantsModalVisible(false);
+          setInPersonValue(0);
+        },
+      });
+    } else {
+      // Pas de modifications, fermer directement
+      setParticipantsModalVisible(false);
+      setInPersonValue(0);
+    }
+  };
+
   // Sauvegarder l'assistance pour le meeting courant
   const handleSaveAssistance = async () => {
     if (selectedMeeting) {
@@ -114,6 +194,10 @@ function Meetings() {
       try {
         await participantService.saveAssistance(selectedMeeting.id, total, inPersonValue, values);
         message.success('Assistance sauvegardée');
+
+        // Sauvegarder les nouvelles valeurs initiales après sauvegarde réussie
+        setInitialInPersonValue(inPersonValue);
+        setInitialAssistanceValues(new Map(assistanceValues));
 
         // Mettre à jour la liste des réunions pour afficher les nouvelles valeurs d'assistance
         setFilteredMeetings((prevMeetings) =>
@@ -178,6 +262,9 @@ function Meetings() {
         }
       });
       setAssistanceValues(initialAssistance);
+      // Sauvegarder les valeurs initiales pour détecter les changements
+      setInitialAssistanceValues(new Map(initialAssistance));
+      setInitialInPersonValue(response.inPersonTotal ?? 0);
     } catch (err) {
       message.error('Erreur lors du chargement des participants');
       console.error(err);
@@ -231,6 +318,9 @@ function Meetings() {
         }
       });
       setAssistanceValues(initialAssistance);
+      // Sauvegarder les valeurs initiales pour détecter les changements
+      setInitialAssistanceValues(new Map(initialAssistance));
+      setInitialInPersonValue(response.inPersonTotal ?? 0);
 
       message.success('Participants actualisés depuis Zoom');
     } catch (err) {
@@ -644,10 +734,7 @@ function Meetings() {
           </div>
         }
         open={participantsModalVisible}
-        onCancel={() => {
-          setParticipantsModalVisible(false);
-          setInPersonValue(0);
-        }}
+        onCancel={handleCloseModal}
         width={1000}
         footer={[
           <Button
@@ -658,13 +745,7 @@ function Meetings() {
           >
             Actualiser depuis Zoom
           </Button>,
-          <Button
-            key="close"
-            onClick={() => {
-              setParticipantsModalVisible(false);
-              setInPersonValue(0);
-            }}
-          >
+          <Button key="close" onClick={handleCloseModal}>
             Fermer
           </Button>,
         ]}
