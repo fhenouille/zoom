@@ -6,6 +6,7 @@ import {
   BarChartOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
+  HistoryOutlined,
   ReloadOutlined,
   SaveOutlined,
   SearchOutlined,
@@ -22,6 +23,7 @@ import {
   Space,
   Spin,
   Table,
+  Tag,
   Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -397,14 +399,17 @@ function Meetings() {
 
   // Vérifier la disponibilité des sondages après le chargement des meetings filtrés
   // Avec un délai progressif pour éviter les erreurs 429 (rate limiting)
+  // Les réunions archivées sont exclues car leurs données Zoom ne sont plus accessibles
   useEffect(() => {
     if (filteredMeetings && filteredMeetings.length > 0) {
-      filteredMeetings.forEach((meeting, index) => {
-        // Délai de 500ms entre chaque vérification pour respecter les limites de l'API Zoom
-        setTimeout(() => {
-          checkPollsAvailability(meeting.id);
-        }, index * 500);
-      });
+      filteredMeetings
+        .filter((meeting) => !meeting.archived)
+        .forEach((meeting, index) => {
+          // Délai de 500ms entre chaque vérification pour respecter les limites de l'API Zoom
+          setTimeout(() => {
+            checkPollsAvailability(meeting.id);
+          }, index * 500);
+        });
     }
   }, [filteredMeetings]);
 
@@ -418,8 +423,33 @@ function Meetings() {
     try {
       const startDateStr = startDate.toISOString();
       const endDateStr = endDate.toISOString();
-      const data = await meetingService.getAllMeetings(startDateStr, endDateStr);
-      setFilteredMeetings(data);
+
+      // Récupère les réunions actives et les réunions archivées en parallèle
+      const [data, archivedData] = await Promise.all([
+        meetingService.getAllMeetings(startDateStr, endDateStr),
+        meetingService.getArchivedMeetings(startDateStr, endDateStr).catch(() => []),
+      ]);
+
+      // Convertit les archives au format Meeting
+      const archivedMeetings: Meeting[] = archivedData.map((a) => ({
+        id: a.meetingId,
+        start: a.startTime,
+        end: a.endTime,
+        timezone: a.timezone,
+        inPersonTotal: a.inPersonTotal,
+        videoconferenceTotal: a.remoteTotal,
+        archived: true,
+      }));
+
+      // Fusionne en excluant les doublons (réunion encore active ET archivée)
+      const activeIds = new Set(data.map((m) => m.id));
+      const uniqueArchived = archivedMeetings.filter((m) => !activeIds.has(m.id));
+
+      const allMeetings = [...data, ...uniqueArchived].sort(
+        (a, b) => new Date(b.start).getTime() - new Date(a.start).getTime()
+      );
+
+      setFilteredMeetings(allMeetings);
     } catch (err) {
       setError(err as Error);
       message.error('Erreur lors du chargement des réunions');
@@ -586,6 +616,15 @@ function Meetings() {
       title: 'Actions',
       key: 'actions',
       render: (_: unknown, record: Meeting) => {
+        // Réunion archivée : pas d'accès aux données Zoom
+        if (record.archived) {
+          return (
+            <Tag icon={<HistoryOutlined />} color="orange">
+              Réunion Archivée
+            </Tag>
+          );
+        }
+
         const hasPoll = pollsAvailability.get(record.id);
         const isChecking = checkingPolls.has(record.id);
 

@@ -122,11 +122,13 @@ public class DataPurgeService {
      * @return L'archive créée
      */
     private MeetingArchive createArchive(Meeting meeting, MeetingAssistance assistance) {
+        // Note : assistance.getTotal() représente uniquement les participants en visio,
+        // et assistance.getInPersonTotal() les participants en présentiel.
         return new MeetingArchive(
             meeting.getId(),
             meeting,
             assistance.getInPersonTotal(),
-            assistance.getTotal() - assistance.getInPersonTotal()
+            assistance.getTotal()
         );
     }
 

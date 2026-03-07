@@ -10,10 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.zoom.dto.*;
 import com.zoom.dto.AssistanceStatisticsResponse.DailyAssistanceStats;
-import com.zoom.entity.Meeting;
-import com.zoom.entity.MeetingAssistance;
-import com.zoom.repository.MeetingAssistanceRepository;
-import com.zoom.repository.MeetingRepository;
+import com.zoom.entity.*;
+import com.zoom.repository.*;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +28,7 @@ public class MeetingService {
     private final MeetingRepository meetingRepository;
     private final ZoomApiService zoomApiService;
     private final MeetingAssistanceRepository meetingAssistanceRepository;
+    private final MeetingArchiveRepository meetingArchiveRepository;
 
     /**
      * Récupère toutes les réunions
@@ -304,27 +303,23 @@ public class MeetingService {
 
     /**
      * Récupère les statistiques d'assistance pour une période donnée
-     * Regroupe les données par jour
+     * Regroupe les données par jour, en fusionnant les réunions actives et archivées
      */
     @Transactional(readOnly = true)
     public AssistanceStatisticsResponse getAssistanceStatistics(LocalDateTime startDate, LocalDateTime endDate) {
         log.info("Récupération des statistiques d'assistance (startDate: {}, endDate: {})", startDate, endDate);
 
-        // Récupère tous les meetings dans la période
-        List<Meeting> meetings = meetingRepository.findByStartBetween(startDate, endDate);
-
         // Map pour regrouper les statistiques par jour
         Map<LocalDate, DailyAssistanceStats> dailyStatsMap = new HashMap<>();
 
+        // --- Réunions actives (non purgées) ---
+        List<Meeting> meetings = meetingRepository.findByStartBetween(startDate, endDate);
         for (Meeting meeting : meetings) {
-            // Récupère les données d'assistance pour ce meeting
             Optional<MeetingAssistance> assistanceOpt = meetingAssistanceRepository.findByMeetingId(meeting.getId());
-
             if (assistanceOpt.isPresent()) {
                 MeetingAssistance assistance = assistanceOpt.get();
                 LocalDate date = meeting.getStart().toLocalDate();
 
-                // Récupère ou crée les stats pour ce jour
                 DailyAssistanceStats stats = dailyStatsMap.computeIfAbsent(date, d -> {
                     DailyAssistanceStats newStats = new DailyAssistanceStats();
                     newStats.setDate(d.toString());
@@ -335,15 +330,33 @@ public class MeetingService {
                     return newStats;
                 });
 
-                // Le champ "total" dans MeetingAssistance représente le nombre de participants en visio
-                // Le champ "inPersonTotal" représente le nombre de participants en présentiel
-
-                // Accumule les statistiques
+                // Le champ "total" dans MeetingAssistance représente uniquement les participants en visio
                 stats.setInPerson(stats.getInPerson() + assistance.getInPersonTotal());
-                stats.setRemote(stats.getRemote() + assistance.getTotal()); // total = visio uniquement
+                stats.setRemote(stats.getRemote() + assistance.getTotal());
                 stats.setTotal(stats.getTotal() + assistance.getTotal() + assistance.getInPersonTotal());
                 stats.setMeetingCount(stats.getMeetingCount() + 1);
             }
+        }
+
+        // --- Réunions archivées (purgées) ---
+        List<MeetingArchive> archives = meetingArchiveRepository.findByStartTimeBetween(startDate, endDate);
+        for (MeetingArchive archive : archives) {
+            LocalDate date = archive.getStartTime().toLocalDate();
+
+            DailyAssistanceStats stats = dailyStatsMap.computeIfAbsent(date, d -> {
+                DailyAssistanceStats newStats = new DailyAssistanceStats();
+                newStats.setDate(d.toString());
+                newStats.setInPerson(0);
+                newStats.setRemote(0);
+                newStats.setTotal(0);
+                newStats.setMeetingCount(0);
+                return newStats;
+            });
+
+            stats.setInPerson(stats.getInPerson() + archive.getInPersonTotal());
+            stats.setRemote(stats.getRemote() + archive.getRemoteTotal());
+            stats.setTotal(stats.getTotal() + archive.getInPersonTotal() + archive.getRemoteTotal());
+            stats.setMeetingCount(stats.getMeetingCount() + 1);
         }
 
         // Convertit la map en liste triée par date
@@ -356,7 +369,8 @@ public class MeetingService {
         response.setStartDate(startDate);
         response.setEndDate(endDate);
 
-        log.info("Statistiques récupérées: {} jours avec données", dailyStatsList.size());
+        log.info("Statistiques récupérées: {} jours avec données ({} actives, {} archivées)",
+                dailyStatsList.size(), meetings.size(), archives.size());
         return response;
     }
 }

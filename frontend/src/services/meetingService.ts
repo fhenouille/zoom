@@ -1,4 +1,4 @@
-import { Meeting } from '@/types/meeting';
+import { ArchivedMeeting, Meeting } from '@/types/meeting';
 import { apiClient } from './api';
 
 // Interface pour les résultats de sondages
@@ -51,6 +51,16 @@ export const meetingService = {
    */
   createMeeting: async (meeting: Omit<Meeting, 'id'>): Promise<Meeting> => {
     const response = await apiClient.post<Meeting>('/meetings', meeting);
+    return response.data;
+  },
+
+  /**
+   * Récupère les réunions archivées dans une plage de dates
+   */
+  getArchivedMeetings: async (startDate: string, endDate: string): Promise<ArchivedMeeting[]> => {
+    const response = await apiClient.get<ArchivedMeeting[]>(
+      `/archive/meetings/range?startTime=${encodeURIComponent(startDate)}&endTime=${encodeURIComponent(endDate)}`
+    );
     return response.data;
   },
 
