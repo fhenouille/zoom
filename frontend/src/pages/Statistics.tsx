@@ -64,6 +64,7 @@ function Statistics() {
       date: dayjs(stat.date).format('DD/MM'),
       Présentiel: stat.inPerson,
       Visio: stat.remote,
+      Total: stat.total,
     })) || [];
 
   // Calcule les moyennes
@@ -120,6 +121,7 @@ function Statistics() {
               <Legend />
               <Bar dataKey="Présentiel" fill="#1890ff" />
               <Bar dataKey="Visio" fill="#52c41a" />
+              <Bar dataKey="Total" fill="#722ed1" />
             </BarChart>
           ) : (
             <LineChart
@@ -149,6 +151,13 @@ function Statistics() {
                 stroke="#52c41a"
                 strokeWidth={2}
                 dot={{ fill: '#52c41a' }}
+              />
+              <Line
+                type="monotone"
+                dataKey="Total"
+                stroke="#722ed1"
+                strokeWidth={2}
+                dot={{ fill: '#722ed1' }}
               />
             </LineChart>
           )}
