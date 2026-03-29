@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Zoom Meetings</title>
+    <!--
+      GitHub Pages SPA redirect workaround.
+      Quand GitHub Pages retourne 404 sur une route comme /zoom/meetings,
+      ce script encode le chemin dans sessionStorage et redirige vers /zoom/
+      qui restaure l'URL réelle via index.html.
+    -->
+    <script>
+      (function () {
+        // Extrait la partie après /zoom/ (ex: "meetings" ou "statistics")
+        var segements = window.location.pathname.split('/');
+        // segements = ['', 'zoom', 'meetings'] pour /zoom/meetings
+        var baseParts = []; // partie du basename (/zoom)
+        var routeParts = []; // partie de la route React (/meetings)
+        var foundBase = false;
+        for (var i = 1; i < segements.length; i++) {
+          if (!foundBase && segements[i] === 'zoom') {
+            foundBase = true;
+          } else if (foundBase) {
+            routeParts.push(segements[i]);
+          }
+        }
+        var route = '/' + routeParts.join('/') + window.location.search + window.location.hash;
+        sessionStorage.setItem('spa-redirect', route);
+        window.location.replace('/zoom/');
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
