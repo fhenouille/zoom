@@ -1,11 +1,16 @@
 import { statisticsService } from '@/services/statisticsService';
 import { AssistanceStatisticsResponse } from '@/types/statistics';
-import { BarChartOutlined, CalendarOutlined, FilePdfOutlined, ReloadOutlined } from '@ant-design/icons';
+import {
+  BarChartOutlined,
+  CalendarOutlined,
+  FilePdfOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
 import { Button, Card, DatePicker, Empty, Select, Space, Spin, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
-import autoTable from 'jspdf-autotable';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useEffect, useRef, useState } from 'react';
 import {
   Bar,
@@ -359,7 +364,14 @@ function Statistics() {
       {statistics && statistics.dailyStats.length > 0 && (
         <div
           aria-hidden="true"
-          style={{ position: 'fixed', top: 0, left: 0, visibility: 'hidden', pointerEvents: 'none', zIndex: -1 }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            visibility: 'hidden',
+            pointerEvents: 'none',
+            zIndex: -1,
+          }}
         >
           <div ref={barChartRef}>
             <BarChart
