@@ -11,7 +11,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -28,6 +28,169 @@ import {
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
+// ─── Helpers pour le dessin de graphiques dans jsPDF ─────────────────────────
+
+type ChartEntry = { date: string; Présentiel: number; Visio: number; Total: number };
+
+const SERIES_KEYS = ['Présentiel', 'Visio', 'Total'] as const;
+type SeriesKey = (typeof SERIES_KEYS)[number];
+
+const SERIES_COLORS: Record<SeriesKey, [number, number, number]> = {
+  Présentiel: [24, 144, 255],
+  Visio: [82, 196, 26],
+  Total: [114, 46, 209],
+};
+
+const drawPdfBarChart = (
+  doc: jsPDF,
+  data: ChartEntry[],
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) => {
+  if (data.length === 0) return;
+  const maxVal = Math.max(...data.flatMap((d) => SERIES_KEYS.map((s) => d[s])), 1);
+  const padL = 15;
+  const padB = 14;
+  const padT = 5;
+  const cw = w - padL;
+  const ch = h - padB - padT;
+
+  // Quadrillage horizontal + étiquettes axe Y
+  const Y_TICKS = 5;
+  for (let i = 0; i <= Y_TICKS; i++) {
+    const val = Math.round((maxVal * i) / Y_TICKS);
+    const ly = y + padT + ch - (ch * i) / Y_TICKS;
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.2);
+    doc.line(x + padL, ly, x + padL + cw, ly);
+    doc.setFontSize(6);
+    doc.setTextColor(100, 100, 100);
+    doc.text(String(val), x + padL - 2, ly + 1.5, { align: 'right' });
+  }
+
+  // Axes
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.4);
+  doc.line(x + padL, y + padT, x + padL, y + padT + ch);
+  doc.line(x + padL, y + padT + ch, x + padL + cw, y + padT + ch);
+
+  // Barres
+  const groupW = cw / data.length;
+  const barW = (groupW * 0.72) / SERIES_KEYS.length;
+  const groupPad = groupW * 0.14;
+
+  data.forEach((d, i) => {
+    SERIES_KEYS.forEach((s, j) => {
+      const barH = (d[s] / maxVal) * ch;
+      const bx = x + padL + i * groupW + groupPad + j * barW;
+      const by = y + padT + ch - barH;
+      const [r, g, b] = SERIES_COLORS[s];
+      doc.setFillColor(r, g, b);
+      doc.rect(bx, by, barW, Math.max(barH, 0.1), 'F');
+    });
+    doc.setFontSize(6);
+    doc.setTextColor(80, 80, 80);
+    doc.text(d.date, x + padL + (i + 0.5) * groupW, y + padT + ch + 5, { align: 'center' });
+  });
+
+  // Légende
+  let lx = x + padL;
+  const legendY = y + h;
+  SERIES_KEYS.forEach((s) => {
+    const [r, g, b] = SERIES_COLORS[s];
+    doc.setFillColor(r, g, b);
+    doc.rect(lx, legendY - 3, 4, 3, 'F');
+    doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
+    doc.text(s, lx + 5, legendY);
+    lx += doc.getTextWidth(s) + 12;
+  });
+};
+
+const drawPdfLineChart = (
+  doc: jsPDF,
+  data: ChartEntry[],
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) => {
+  if (data.length === 0) return;
+  const maxVal = Math.max(...data.flatMap((d) => SERIES_KEYS.map((s) => d[s])), 1);
+  const padL = 15;
+  const padB = 14;
+  const padT = 5;
+  const cw = w - padL;
+  const ch = h - padB - padT;
+
+  // Quadrillage horizontal + étiquettes axe Y
+  const Y_TICKS = 5;
+  for (let i = 0; i <= Y_TICKS; i++) {
+    const val = Math.round((maxVal * i) / Y_TICKS);
+    const ly = y + padT + ch - (ch * i) / Y_TICKS;
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.2);
+    doc.line(x + padL, ly, x + padL + cw, ly);
+    doc.setFontSize(6);
+    doc.setTextColor(100, 100, 100);
+    doc.text(String(val), x + padL - 2, ly + 1.5, { align: 'right' });
+  }
+
+  // Axes
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.4);
+  doc.line(x + padL, y + padT, x + padL, y + padT + ch);
+  doc.line(x + padL, y + padT + ch, x + padL + cw, y + padT + ch);
+
+  // Position X d'un point (gère le cas 1 point)
+  const xPos = (i: number) =>
+    data.length === 1 ? x + padL + cw / 2 : x + padL + (i / (data.length - 1)) * cw;
+
+  // Courbes + points
+  SERIES_KEYS.forEach((s) => {
+    const [r, g, b] = SERIES_COLORS[s];
+    doc.setDrawColor(r, g, b);
+    doc.setLineWidth(0.7);
+    for (let i = 0; i < data.length - 1; i++) {
+      doc.line(
+        xPos(i),
+        y + padT + ch - (data[i][s] / maxVal) * ch,
+        xPos(i + 1),
+        y + padT + ch - (data[i + 1][s] / maxVal) * ch
+      );
+    }
+    data.forEach((d, i) => {
+      doc.setFillColor(r, g, b);
+      doc.circle(xPos(i), y + padT + ch - (d[s] / maxVal) * ch, 1, 'F');
+    });
+  });
+
+  // Étiquettes axe X
+  data.forEach((d, i) => {
+    doc.setFontSize(6);
+    doc.setTextColor(80, 80, 80);
+    doc.text(d.date, xPos(i), y + padT + ch + 5, { align: 'center' });
+  });
+
+  // Légende
+  let lx = x + padL;
+  const legendY = y + h;
+  SERIES_KEYS.forEach((s) => {
+    const [r, g, b] = SERIES_COLORS[s];
+    doc.setFillColor(r, g, b);
+    doc.setDrawColor(r, g, b);
+    doc.setLineWidth(0.7);
+    doc.line(lx, legendY - 1.5, lx + 6, legendY - 1.5);
+    doc.circle(lx + 3, legendY - 1.5, 1, 'F');
+    doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
+    doc.text(s, lx + 8, legendY);
+    lx += doc.getTextWidth(s) + 15;
+  });
+};
+
 function Statistics() {
   const [isLoading, setIsLoading] = useState(false);
   const [statistics, setStatistics] = useState<AssistanceStatisticsResponse | null>(null);
@@ -36,47 +199,14 @@ function Statistics() {
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
   const [isPdfExporting, setIsPdfExporting] = useState(false);
 
-  // Refs pour la capture des graphiques (éléments cachés en visibility:hidden)
-  const barChartRef = useRef<HTMLDivElement>(null);
-  const lineChartRef = useRef<HTMLDivElement>(null);
-
   // Formate une date ISO en "Samedi 28 mars 2026"
   const formatDateFull = (dateStr: string): string => {
     const formatted = dayjs(dateStr).locale('fr').format('dddd D MMMM YYYY');
     return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   };
 
-  // Convertit le SVG d'un graphique en PNG data URL via canvas
-  const svgToDataUrl = (container: HTMLDivElement): Promise<string | null> => {
-    return new Promise((resolve) => {
-      const svgEl = container.querySelector('svg');
-      if (!svgEl) return resolve(null);
-      const svgWidth = Number.parseFloat(svgEl.getAttribute('width') ?? '880');
-      const svgHeight = Number.parseFloat(svgEl.getAttribute('height') ?? '400');
-      const cloned = svgEl.cloneNode(true) as SVGSVGElement;
-      cloned.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-      const svgStr = new XMLSerializer().serializeToString(cloned);
-      const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = svgWidth * 2;
-        canvas.height = svgHeight * 2;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return resolve(null);
-        ctx.scale(2, 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, svgWidth, svgHeight);
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
-      };
-      img.onerror = () => resolve(null);
-      img.src = src;
-    });
-  };
-
-  // Exporte un rapport PDF : tableau + histogramme + courbes
-  const handleExportPdf = async () => {
+  // Exporte un rapport PDF : tableau + histogramme + courbes (dessinés directement via jsPDF)
+  const handleExportPdf = () => {
     if (!statistics || statistics.dailyStats.length === 0) return;
     setIsPdfExporting(true);
     try {
@@ -85,6 +215,7 @@ function Statistics() {
 
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0);
       doc.text("Rapport de Statistiques d'Assistance", pageWidth / 2, 18, { align: 'center' });
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
@@ -104,47 +235,42 @@ function Statistics() {
           stat.total,
         ]),
         startY: 35,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [24, 144, 255], fontStyle: 'bold' },
+        tableWidth: 195,
+        margin: { left: (pageWidth - 195) / 2, right: (pageWidth - 195) / 2 },
+        styles: { fontSize: 10, halign: 'center' },
+        headStyles: { fillColor: [24, 144, 255], fontStyle: 'bold', halign: 'center' },
         columnStyles: {
-          0: { cellWidth: 90 },
+          0: { cellWidth: 90, halign: 'left' },
           1: { cellWidth: 35, halign: 'center' },
           2: { cellWidth: 35, halign: 'center' },
           3: { cellWidth: 35, halign: 'center' },
         },
       });
 
-      if (barChartRef.current) {
-        const barImg = await svgToDataUrl(barChartRef.current);
-        if (barImg) {
-          doc.addPage();
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          doc.text('Histogramme', pageWidth / 2, 15, { align: 'center' });
-          const bw = pageWidth - 20;
-          const bh = (400 * bw) / 880;
-          doc.addImage(barImg, 'PNG', 10, 22, bw, bh);
-        }
-      }
+      const pdfData: ChartEntry[] = statistics.dailyStats.map((stat) => ({
+        date: dayjs(stat.date).format('DD/MM'),
+        Présentiel: stat.inPerson,
+        Visio: stat.remote,
+        Total: stat.total,
+      }));
 
-      if (lineChartRef.current) {
-        const lineImg = await svgToDataUrl(lineChartRef.current);
-        if (lineImg) {
-          doc.addPage();
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          doc.text('Courbes', pageWidth / 2, 15, { align: 'center' });
-          const lw = pageWidth - 20;
-          const lh = (400 * lw) / 880;
-          doc.addImage(lineImg, 'PNG', 10, 22, lw, lh);
-        }
-      }
+      doc.addPage();
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0);
+      doc.text('Histogramme', pageWidth / 2, 15, { align: 'center' });
+      drawPdfBarChart(doc, pdfData, 10, 22, pageWidth - 20, 150);
+
+      doc.addPage();
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0);
+      doc.text('Courbes', pageWidth / 2, 15, { align: 'center' });
+      drawPdfLineChart(doc, pdfData, 10, 22, pageWidth - 20, 150);
 
       doc.save(
         `rapport-assistance-${startDate.format('YYYY-MM-DD')}_${endDate.format('YYYY-MM-DD')}.pdf`
       );
-    } catch (err) {
-      console.error("Erreur lors de l'export PDF:", err);
     } finally {
       setIsPdfExporting(false);
     }
@@ -359,77 +485,6 @@ function Statistics() {
 
       {/* Graphique */}
       <Card>{renderChartContent()}</Card>
-
-      {/* Graphiques cachés hors écran pour la capture PDF (visibility:hidden = en DOM, invisible) */}
-      {statistics && statistics.dailyStats.length > 0 && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            visibility: 'hidden',
-            pointerEvents: 'none',
-            zIndex: -1,
-          }}
-        >
-          <div ref={barChartRef}>
-            <BarChart
-              width={880}
-              height={400}
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Présentiel" fill="#1890ff" isAnimationActive={false} />
-              <Bar dataKey="Visio" fill="#52c41a" isAnimationActive={false} />
-              <Bar dataKey="Total" fill="#722ed1" isAnimationActive={false} />
-            </BarChart>
-          </div>
-          <div ref={lineChartRef}>
-            <LineChart
-              width={880}
-              height={400}
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="Présentiel"
-                stroke="#1890ff"
-                strokeWidth={2}
-                dot={{ fill: '#1890ff' }}
-                isAnimationActive={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="Visio"
-                stroke="#52c41a"
-                strokeWidth={2}
-                dot={{ fill: '#52c41a' }}
-                isAnimationActive={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="Total"
-                stroke="#722ed1"
-                strokeWidth={2}
-                dot={{ fill: '#722ed1' }}
-                isAnimationActive={false}
-              />
-            </LineChart>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
