@@ -35,4 +35,11 @@ export const participantService = {
   ): Promise<void> {
     await apiClient.post(`/meetings/${meetingId}/assistance`, { total, inPersonTotal, values });
   },
+
+  /**
+   * Vide les données d'assistance sauvegardées pour un meeting (admin uniquement)
+   */
+  async clearAssistance(meetingId: number): Promise<void> {
+    await apiClient.delete(`/meetings/${meetingId}/assistance`);
+  },
 };

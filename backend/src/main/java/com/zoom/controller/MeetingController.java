@@ -216,6 +216,21 @@ public class MeetingController {
     }
 
     /**
+     * Vide les données d'assistance sauvegardées pour un meeting (réservé aux ADMIN)
+     */
+    @DeleteMapping("/{id}/assistance")
+    public ResponseEntity<Void> clearAssistance(@PathVariable Long id) {
+        log.info("🗑️ DELETE /api/meetings/{}/assistance - Suppression de l'assistance", id);
+
+        meetingAssistanceRepository.findByMeetingId(id).ifPresent(existing -> {
+            meetingAssistanceRepository.delete(existing);
+            log.info("✓ DELETE /api/meetings/{}/assistance - Assistance supprimée", id);
+        });
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * Récupère les statistiques d'assistance pour une période donnée
      */
     @GetMapping("/statistics")

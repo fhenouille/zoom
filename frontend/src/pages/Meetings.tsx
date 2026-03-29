@@ -6,6 +6,7 @@ import { Participant } from '@/types/participant';
 import {
   BarChartOutlined,
   CalendarOutlined,
+  ClearOutlined,
   ClockCircleOutlined,
   HistoryOutlined,
   ReloadOutlined,
@@ -198,6 +199,44 @@ function Meetings() {
       setParticipantsModalVisible(false);
       setInPersonValue(0);
     }
+  };
+
+  // Vider les données d'assistance sauvegardées en base (admin uniquement)
+  const handleClearAssistance = () => {
+    if (!selectedMeeting) return;
+    Modal.confirm({
+      title: "Vider les données d'assistance",
+      content: `Êtes-vous sûr de vouloir supprimer toutes les données d'assistance sauvegardées pour cette réunion ? Cette action est irréversible.`,
+      okText: 'Vider',
+      okButtonProps: { danger: true },
+      cancelText: 'Annuler',
+      onOk: async () => {
+        try {
+          await participantService.clearAssistance(selectedMeeting.id);
+          setInPersonValue(0);
+          // Recalculer les valeurs depuis les règles (comme si rien n'était sauvegardé)
+          const recalculated = new Map<number, number | string>();
+          participants.forEach((p) => {
+            const pollAnswer = attendancePollData.get(p.name);
+            recalculated.set(p.id, calculateInitialAssistance(p.name, pollAnswer));
+          });
+          setAssistanceValues(recalculated);
+          setInitialAssistanceValues(new Map(recalculated));
+          setInitialInPersonValue(0);
+          setFilteredMeetings((prevMeetings) =>
+            prevMeetings.map((m) =>
+              m.id === selectedMeeting.id
+                ? { ...m, inPersonTotal: null, videoconferenceTotal: null }
+                : m
+            )
+          );
+          message.success("Données d'assistance supprimées");
+        } catch (err) {
+          message.error("Erreur lors de la suppression des données d'assistance");
+          console.error(err);
+        }
+      },
+    });
   };
 
   // Sauvegarder l'assistance pour le meeting courant
@@ -826,6 +865,13 @@ function Meetings() {
           >
             Actualiser depuis Zoom
           </Button>,
+          ...(isAdmin
+            ? [
+                <Button key="clear" danger icon={<ClearOutlined />} onClick={handleClearAssistance}>
+                  Vider l'assistance
+                </Button>,
+              ]
+            : []),
           <Button key="close" onClick={handleCloseModal}>
             Fermer
           </Button>,
