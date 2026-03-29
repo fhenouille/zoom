@@ -1,3 +1,4 @@
+import { useAuth } from '@/contexts/AuthContext';
 import { meetingService, PollResponse } from '@/services/meetingService';
 import { participantService } from '@/services/participantService';
 import { Meeting } from '@/types/meeting';
@@ -13,6 +14,7 @@ import {
   TeamOutlined,
 } from '@ant-design/icons';
 import {
+  Alert,
   Button,
   Card,
   DatePicker,
@@ -32,7 +34,17 @@ import { useEffect, useRef, useState } from 'react';
 
 const { Title } = Typography;
 
+// Retourne true si la réunion s'est terminée il y a plus de 48h
+const isMeetingLocked = (meeting: Meeting): boolean => {
+  if (!meeting.end) return false;
+  const endTime = new Date(meeting.end).getTime();
+  const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000;
+  return endTime < fortyEightHoursAgo;
+};
+
 function Meetings() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [participantsModalVisible, setParticipantsModalVisible] = useState(false);
@@ -480,6 +492,9 @@ function Meetings() {
   // Vérifier si le sondage d'assistance existe
   const hasAttendancePoll = attendancePollData.size > 0;
 
+  // Lecture seule si la réunion est terminée depuis > 48h et que l'utilisateur n'est pas ADMIN
+  const isReadOnly = !!selectedMeeting && isMeetingLocked(selectedMeeting) && !isAdmin;
+
   const participantColumns: ColumnsType<Participant> = [
     {
       title: 'Nom',
@@ -501,6 +516,7 @@ function Meetings() {
             min="0"
             max="99"
             value={displayValue}
+            disabled={isReadOnly}
             onChange={(e) => {
               const value = e.target.value;
               if (value === '') {
@@ -512,7 +528,11 @@ function Meetings() {
                 }
               }
             }}
-            style={{ width: '60px', textAlign: 'center' }}
+            style={{
+              width: '60px',
+              textAlign: 'center',
+              cursor: isReadOnly ? 'not-allowed' : 'auto',
+            }}
           />
         );
       },
@@ -769,6 +789,7 @@ function Meetings() {
                   min={0}
                   max={999}
                   value={inPersonValue}
+                  disabled={isReadOnly}
                   onChange={(value) => setInPersonValue(value ?? 0)}
                   style={{
                     width: '80px',
@@ -780,14 +801,16 @@ function Meetings() {
               <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#1890ff' }}>
                 En visioconférence: {calculateTotalAssistance()}
               </span>
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                onClick={handleSaveAssistance}
-                style={{ fontSize: '14px', height: '36px' }}
-              >
-                Sauvegarder
-              </Button>
+              {!isReadOnly && (
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  onClick={handleSaveAssistance}
+                  style={{ fontSize: '14px', height: '36px' }}
+                >
+                  Sauvegarder
+                </Button>
+              )}
             </div>
           </div>
         }
@@ -808,6 +831,15 @@ function Meetings() {
           </Button>,
         ]}
       >
+        {isReadOnly && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message="Modification verrouillée"
+            description="Cette réunion s'est terminée il y a plus de 48h. Seul un administrateur peut modifier l'assistance."
+          />
+        )}
         {loadingParticipants ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <Spin size="large" />
