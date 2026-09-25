@@ -6,7 +6,7 @@ import {
   FilePdfOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { Button, Card, DatePicker, Empty, Select, Space, Spin, Typography } from 'antd';
+import { Alert, Button, Card, DatePicker, Empty, Select, Space, Spin, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
 import jsPDF from 'jspdf';
@@ -226,6 +226,16 @@ function Statistics() {
         { align: 'center' }
       );
 
+      let tableStartY = 35;
+      if (statistics.note) {
+        const noteLines = doc.splitTextToSize(statistics.note, 180);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(150, 110, 0);
+        doc.text(noteLines, pageWidth / 2, 34, { align: 'center' });
+        tableStartY = 42 + noteLines.length * 4;
+      }
+
       autoTable(doc, {
         head: [['Date', 'Présentiel', 'Visio', 'Total']],
         body: statistics.dailyStats.map((stat) => [
@@ -234,7 +244,7 @@ function Statistics() {
           stat.remote,
           stat.total,
         ]),
-        startY: 35,
+        startY: tableStartY,
         tableWidth: 195,
         margin: { left: (pageWidth - 195) / 2, right: (pageWidth - 195) / 2 },
         styles: { fontSize: 10, halign: 'center' },
@@ -320,6 +330,7 @@ function Statistics() {
   const totalInPerson = statistics?.dailyStats.reduce((sum, stat) => sum + stat.inPerson, 0) || 0;
   const totalRemote = statistics?.dailyStats.reduce((sum, stat) => sum + stat.remote, 0) || 0;
   const totalAssistance = totalInPerson + totalRemote;
+  const statisticsNote = statistics?.note;
 
   // Nombre de jours avec des données
   const daysWithData = statistics?.dailyStats.length || 1;
@@ -481,6 +492,16 @@ function Statistics() {
             </div>
           </Space>
         </Card>
+      )}
+
+      {statisticsNote && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: '24px' }}
+          message="Exception appliquée"
+          description={statisticsNote}
+        />
       )}
 
       {/* Graphique */}

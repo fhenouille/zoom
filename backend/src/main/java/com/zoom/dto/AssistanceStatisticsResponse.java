@@ -16,6 +16,8 @@ public class AssistanceStatisticsResponse {
     private List<DailyAssistanceStats> dailyStats;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+    private String note;
+    private Integer excludedZeroEntries;
 
     /**
      * Statistiques pour une journée donnée

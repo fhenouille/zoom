@@ -314,10 +314,15 @@ public class MeetingService {
 
         // --- Réunions actives (non purgées) ---
         List<Meeting> meetings = meetingRepository.findByStartBetween(startDate, endDate);
+        int excludedZeroEntriesCount = 0;
         for (Meeting meeting : meetings) {
             Optional<MeetingAssistance> assistanceOpt = meetingAssistanceRepository.findByMeetingId(meeting.getId());
             if (assistanceOpt.isPresent()) {
                 MeetingAssistance assistance = assistanceOpt.get();
+                if (hasZeroAttendanceValue(assistance.getInPersonTotal(), assistance.getTotal())) {
+                    excludedZeroEntriesCount++;
+                    continue;
+                }
                 LocalDate date = meeting.getStart().toLocalDate();
 
                 DailyAssistanceStats stats = dailyStatsMap.computeIfAbsent(date, d -> {
@@ -341,6 +346,10 @@ public class MeetingService {
         // --- Réunions archivées (purgées) ---
         List<MeetingArchive> archives = meetingArchiveRepository.findByStartTimeBetween(startDate, endDate);
         for (MeetingArchive archive : archives) {
+            if (hasZeroAttendanceValue(archive.getInPersonTotal(), archive.getRemoteTotal())) {
+                excludedZeroEntriesCount++;
+                continue;
+            }
             LocalDate date = archive.getStartTime().toLocalDate();
 
             DailyAssistanceStats stats = dailyStatsMap.computeIfAbsent(date, d -> {
@@ -359,7 +368,6 @@ public class MeetingService {
             stats.setMeetingCount(stats.getMeetingCount() + 1);
         }
 
-        // Convertit la map en liste triée par date
         List<DailyAssistanceStats> dailyStatsList = dailyStatsMap.values().stream()
                 .sorted((a, b) -> a.getDate().compareTo(b.getDate()))
                 .collect(Collectors.toList());
@@ -368,9 +376,19 @@ public class MeetingService {
         response.setDailyStats(dailyStatsList);
         response.setStartDate(startDate);
         response.setEndDate(endDate);
+        response.setExcludedZeroEntries(excludedZeroEntriesCount);
+        if (excludedZeroEntriesCount > 0) {
+            response.setNote(String.format(
+                    "Exception appliquée : %d entrée(s) contenant une valeur présentiel ou distantiel à 0 ont été exclues du résultat.",
+                    excludedZeroEntriesCount));
+        }
 
         log.info("Statistiques récupérées: {} jours avec données ({} actives, {} archivées)",
                 dailyStatsList.size(), meetings.size(), archives.size());
         return response;
+    }
+
+    private boolean hasZeroAttendanceValue(Integer inPerson, Integer remote) {
+        return Objects.equals(inPerson, 0) || Objects.equals(remote, 0);
     }
 }
