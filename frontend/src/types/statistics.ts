@@ -10,4 +10,6 @@ export interface AssistanceStatisticsResponse {
   dailyStats: DailyAssistanceStats[];
   startDate: string;
   endDate: string;
+  note?: string | null;
+  excludedZeroEntries?: number | null;
 }
